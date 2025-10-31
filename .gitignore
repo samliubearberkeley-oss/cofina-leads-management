@@ -31,3 +31,7 @@ dist-ssr
 # Build outputs
 build/
 
+.vercel
+
+# Temporary import files
+temp_*.json
