@@ -1,0 +1,40 @@
+.header {
+  background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+  color: var(--bg-paper);
+  padding: 30px;
+  text-align: center;
+  position: relative;
+  border-bottom: 2px solid rgba(63, 52, 43, 0.2);
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(63, 52, 43, 0.06) 1px, transparent 0);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.header h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 5vw, 48px);
+  margin-bottom: 10px;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.header p {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  opacity: 0.95;
+  position: relative;
+  z-index: 1;
+}
+

@@ -1,0 +1,5129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads Data Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-paper: #F3EDE3;
+            --ink-line: #3F342B;
+            --green-1: #8AA753;
+            --green-2: #6B8E4A;
+            --soil-brown: #8C5A3B;
+            --accent-ochre: #E69A00;
+            --accent-teal: #2F6D78;
+            --muted-shadow: rgba(15, 12, 10, 0.12);
+            --muted-shadow-light: rgba(15, 12, 10, 0.08);
+            --font-serif: 'Merriweather', 'Playfair Display', serif;
+            --font-sans: 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --card-radius: 12px;
+            --button-radius: 8px;
+            --card-padding: 12px 16px;
+            --sidebar-spacing: 10px 14px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-paper);
+            padding: 20px;
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--ink-line);
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 1px 1px, rgba(63, 52, 43, 0.08) 1px, transparent 0);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+        
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .main-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+            min-height: calc(100vh - 40px);
+        }
+        
+        .left-panel {
+            width: 250px;
+            flex-shrink: 0;
+        }
+        
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .container {
+            background: var(--bg-paper);
+            border-radius: var(--card-radius);
+            box-shadow: 0 6px 14px var(--muted-shadow);
+            overflow: hidden;
+            border: 1.5px solid var(--ink-line);
+            border-color: rgba(63, 52, 43, 0.15);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+            color: var(--bg-paper);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            border-bottom: 2px solid var(--ink-line);
+            border-color: rgba(63, 52, 43, 0.2);
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(63, 52, 43, 0.06) 1px, transparent 0);
+            background-size: 20px 20px;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        
+        .header h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(32px, 5vw, 48px);
+            margin-bottom: 10px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .edit-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: var(--bg-paper);
+            border: 2px solid rgba(63, 52, 43, 0.2);
+            border-radius: var(--card-radius);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px var(--muted-shadow-light);
+        }
+        
+        .edit-toggle:hover {
+            border-color: var(--accent-ochre);
+            box-shadow: 0 4px 8px var(--muted-shadow);
+        }
+        
+        .edit-toggle input[type="checkbox"] {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .edit-toggle label {
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--ink-line);
+            font-family: var(--font-sans);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: var(--bg-paper);
+            border-bottom: 1px solid rgba(63, 52, 43, 0.15);
+            position: relative;
+        }
+        
+        .stats::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(63, 52, 43, 0.04) 1px, transparent 0);
+            background-size: 20px 20px;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+        
+        .stat-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat-value {
+            font-family: var(--font-serif);
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            color: var(--accent-ochre);
+            line-height: 1.2;
+        }
+        
+        .stat-label {
+            color: var(--soil-brown);
+            font-size: 14px;
+            margin-top: 5px;
+            font-family: var(--font-sans);
+            opacity: 0.8;
+        }
+        
+        .search-box {
+            padding: 20px;
+            background: var(--bg-paper);
+            border-bottom: 1px solid rgba(63, 52, 43, 0.15);
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1.5px solid rgba(63, 52, 43, 0.2);
+            border-radius: var(--button-radius);
+            font-size: 16px;
+            font-family: var(--font-sans);
+            background: var(--bg-paper);
+            color: var(--ink-line);
+            transition: all 0.2s ease;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-ochre);
+            box-shadow: 0 0 0 3px rgba(230, 154, 0, 0.1);
+        }
+        
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-paper);
+            border: 1.5px solid var(--ink-line);
+            border-color: rgba(63, 52, 43, 0.15);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-family: var(--font-sans);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--soil-brown);
+            transition: all 160ms ease;
+            text-align: left;
+            border-bottom: 1px solid rgba(63, 52, 43, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .tab:last-child {
+            border-bottom: none;
+        }
+        
+        .tab:hover {
+            background: rgba(138, 167, 83, 0.1);
+            color: var(--green-2);
+        }
+        
+        .tab.active {
+            color: var(--green-2);
+            background: rgba(230, 154, 0, 0.08);
+            font-weight: 600;
+            border-left: 3px solid var(--accent-ochre);
+        }
+        
+        .summary-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+            color: var(--bg-paper);
+            border: none;
+            border-radius: var(--card-radius);
+            font-family: var(--font-sans);
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px var(--muted-shadow);
+        }
+        
+        .summary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--muted-shadow);
+        }
+        
+        .summary-btn.active {
+            background: linear-gradient(135deg, var(--accent-ochre) 0%, var(--green-2) 100%);
+        }
+        
+        .table-container {
+            overflow: auto;
+            flex: 1;
+            position: relative;
+            background: var(--bg-paper);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 100%;
+        }
+        
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+            color: var(--bg-paper);
+            padding: 15px 12px;
+            text-align: left;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 14px;
+            border-right: 1px solid rgba(243, 237, 227, 0.3);
+            border-bottom: 1.5px solid var(--ink-line);
+            border-color: rgba(63, 52, 43, 0.2);
+            white-space: normal;
+            word-wrap: break-word;
+            min-height: 50px;
+            line-height: 1.4;
+            vertical-align: middle;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(63, 52, 43, 0.1);
+            font-size: 14px;
+            word-wrap: break-word;
+            font-family: var(--font-sans);
+            color: var(--ink-line);
+            vertical-align: middle;
+            white-space: normal;
+            word-break: break-word;
+            hyphens: auto;
+        }
+        
+        tbody tr {
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        tbody tr:hover {
+            background-color: rgba(138, 167, 83, 0.08);
+        }
+        
+        tbody tr.selected {
+            background-color: rgba(230, 154, 0, 0.15);
+        }
+        
+        tbody tr.selected:hover {
+            background-color: rgba(230, 154, 0, 0.2);
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: rgba(243, 237, 227, 0.5);
+        }
+        
+        .checkbox-cell {
+            text-align: center;
+            width: 60px;
+        }
+        
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-cell input[type="checkbox"]:disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .row-selector-cell {
+            text-align: center;
+            width: 50px;
+            padding: 8px;
+            cursor: pointer;
+        }
+        
+        .row-selector-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--soil-brown);
+            background: transparent;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .row-selector-cell:hover .row-selector-circle {
+            border-color: var(--accent-ochre);
+            background: rgba(230, 154, 0, 0.1);
+        }
+        
+        .row-selector-cell.selected .row-selector-circle {
+            background: var(--accent-ochre);
+            border-color: var(--accent-ochre);
+        }
+        
+        .row-selector-cell.selected .row-selector-circle::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--bg-paper);
+        }
+        
+        th.row-selector-cell {
+            background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+            border-right: 1px solid rgba(243, 237, 227, 0.3);
+        }
+        
+        .row-selector-cell {
+            display: none;
+        }
+        
+        .edit-mode .row-selector-cell {
+            display: table-cell;
+        }
+        
+        .link-cell {
+            color: var(--accent-teal);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-teal);
+            transition: all 0.2s ease;
+        }
+        
+        .link-cell:hover {
+            color: var(--green-2);
+            border-bottom-color: var(--green-2);
+            border-bottom-style: solid;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--soil-brown);
+            font-family: var(--font-sans);
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: var(--soil-brown);
+            font-family: var(--font-sans);
+            opacity: 0.7;
+        }
+        
+        .edit-toolbar {
+            display: none;
+            padding: 12px 20px;
+            background: var(--bg-paper);
+            border-bottom: 1px solid rgba(63, 52, 43, 0.15);
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .edit-toolbar.active {
+            display: flex;
+        }
+        
+        .edit-toolbar button {
+            padding: 8px 16px;
+            background: var(--accent-teal);
+            color: white;
+            border: none;
+            border-radius: var(--button-radius);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .edit-toolbar button:hover:not(:disabled) {
+            background: var(--green-2);
+            transform: translateY(-1px);
+        }
+        
+        .edit-toolbar button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .edit-toolbar .shortcut-hint {
+            font-size: 12px;
+            color: var(--soil-brown);
+            opacity: 0.7;
+            margin-left: 8px;
+        }
+        
+        td[contenteditable="true"] {
+            background: rgba(230, 154, 0, 0.05);
+            outline: 2px solid transparent;
+            transition: outline 0.2s ease;
+        }
+        
+        td[contenteditable="true"]:focus {
+            outline: 2px solid var(--accent-ochre);
+            background: rgba(230, 154, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="control-panel">
+                <button class="summary-btn" id="summaryBtn">Accepted Summary</button>
+                <div class="edit-toggle">
+                    <input type="checkbox" id="editModeCheckbox" onchange="toggleEditMode()">
+                    <label for="editModeCheckbox">Edit Mode</label>
+                </div>
+                <div class="tabs" id="tabs"></div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="container">
+                <div class="header">
+                    <h1>📊 Leads Data Management System</h1>
+                    <p>Dynamic table display with edit capabilities</p>
+                </div>
+                
+                <div class="stats" id="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalRows">0</div>
+                        <div class="stat-label">Total Rows</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="filteredRows">0</div>
+                        <div class="stat-label">Filtered Rows</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalCols">0</div>
+                        <div class="stat-label">Total Columns</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="currentSheet">-</div>
+                        <div class="stat-label" id="viewMode">Current Sheet</div>
+                    </div>
+                </div>
+                
+                <div class="edit-toolbar" id="editToolbar">
+                    <button id="addRowBtn" onclick="addRow()">Add Row <span class="shortcut-hint">(Ctrl+N)</span></button>
+                    <button id="deleteRowBtn" onclick="deleteSelectedRows()">Delete Row <span class="shortcut-hint">(Delete)</span></button>
+                    <button id="copyBtn" onclick="copySelectedRows()">Copy <span class="shortcut-hint">(Ctrl+C)</span></button>
+                    <button id="pasteBtn" onclick="pasteRows()">Paste <span class="shortcut-hint">(Ctrl+V)</span></button>
+                    <button id="undoBtn" onclick="undo()">Undo <span class="shortcut-hint">(Ctrl+Z)</span></button>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Search table content...">
+                </div>
+                
+                <div class="table-container">
+                    <div class="loading" id="loading">Loading data...</div>
+                    <table id="dataTable" style="display: none;">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                    <div class="empty" id="empty" style="display: none;">No data available</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Embedded data
+        const allData = {
+    "a16z-gaming": {
+        "columns": [
+            "是否通过linked申请?",
+            "Company Name",
+            "Cohort",
+            "Location",
+            "CEO",
+            "LinkedIn",
+            "Website",
+            "Description"
+        ],
+        "data": [
+            [
+                "",
+                "Human Computer",
+                "COHORT 001",
+                "Bay Area, CA",
+                "Alex",
+                "https://www.linkedin.com/in/eliotgw/",
+                "https://humancomputer.io",
+                "The world's greatest triple-I game studio."
+            ],
+            [
+                "",
+                "Rascal Games",
+                "COHORT 001",
+                "Berkeley, CA",
+                "Rick",
+                "https://www.linkedin.com/in/rickling/",
+                "https://rascalgames.com",
+                "Go on adventures with your friends."
+            ],
+            [
+                "",
+                "RUNREAL",
+                "COHORT 001",
+                "Los Angeles, CA",
+                "Marwan",
+                "https://www.linkedin.com/in/marwan-hilmi/",
+                "https://runreal.dev",
+                "Accelerate Game Development."
+            ],
+            [
+                "",
+                "TaleMonster Games",
+                "COHORT 001",
+                "Istanbul, Turkey",
+                "Irem",
+                "https://www.linkedin.com/in/irem-sumer/",
+                "https://matchvalley.go.link/gyrZX",
+                "Redefining \"casual\" mobile gaming."
+            ],
+            [
+                "",
+                "Unbound Technologies",
+                "COHORT 001",
+                "Oakland, CA",
+                "Florian",
+                "https://www.linkedin.com/in/fhoenig/",
+                "https://www.unbound.io",
+                "Bringing interactive 3D creation to everyone."
+            ],
+            [
+                "",
+                "videogame.ai",
+                "COHORT 001",
+                "San Francisco, CA",
+                "Aaron",
+                "https://www.linkedin.com/in/aaron-yuan-776312a5/",
+                "https://videogame.ai/",
+                "Fully autonomous game studio where AIs work."
+            ],
+            [
+                "",
+                "Circle Games",
+                "COHORT 002",
+                "Istanbul, Turkey",
+                "Gokturk",
+                "https://www.linkedin.com/in/gokturk-balikci/",
+                "https://circle.gs",
+                "Turning potential into perfection!"
+            ],
+            [
+                "",
+                "Daedalia",
+                "COHORT 002",
+                "San Francisco, CA",
+                "Michael",
+                "https://www.linkedin.com/in/shang-michael/",
+                "https://soullink.cc",
+                "Build bonds with virtual humans."
+            ],
+            [
+                "",
+                "Greathorn Games",
+                "COHORT 002",
+                "Vancouver, Canada",
+                "Ian",
+                "https://www.linkedin.com/in/idundore/",
+                "https://greathorn.games",
+                "Socially-driven multiplayer for PC & console."
+            ],
+            [
+                "",
+                "LFG",
+                "COHORT 002",
+                "San Francisco, CA",
+                "Ross",
+                "https://www.linkedin.com/in/ross-targett/",
+                "https://lfgstudio.com",
+                "The hit factory for Gen Alpha."
+            ],
+            [
+                "",
+                "Little Umbrella",
+                "COHORT 002",
+                "Palo Alto, CA",
+                "Tabish",
+                "https://www.linkedin.com/in/taabi/",
+                "https://www.littleumbrella.gg",
+                "Social AI games for the next generation."
+            ],
+            [
+                "",
+                "Refactor Games",
+                "COHORT 002",
+                "Santa Monica, CA",
+                "Nathan",
+                "https://www.linkedin.com/in/burba/",
+                "https://refactorgames.com",
+                "Next-gen sports video games."
+            ],
+            [
+                "",
+                "Torbie",
+                "COHORT 002",
+                "Seattle, WA",
+                "Zabir",
+                "https://www.linkedin.com/in/zabirhoque/",
+                "https://PlayEverbloom.com",
+                "Crafting worlds, connecting hearts."
+            ],
+            [
+                "",
+                "2weeks",
+                "COHORT 003",
+                "New York, NY",
+                "Brandon",
+                "https://www.linkedin.com/in/noughtceratops/",
+                "https://2weeks.games",
+                "Making breakout hits on the open web for you and your friends."
+            ],
+            [
+                "",
+                "Clubs Poker",
+                "COHORT 003",
+                "Philadelphia, PA",
+                "Jon",
+                "https://www.linkedin.com/in/kaplowitz/",
+                "https://clubspoker.com/",
+                "Largest online poker network in North America."
+            ],
+            [
+                "",
+                "Edgar",
+                "COHORT 003",
+                "New York, NY",
+                "Martin",
+                "https://linkedin.com/in/moonmartin",
+                "https://www.edgar.co",
+                "Real-money engagement in F2P via sweepstakes."
+            ],
+            [
+                "",
+                "Elsewhere",
+                "COHORT 003",
+                "San Francisco, CA",
+                "Paul",
+                "https://www.linkedin.com/in/paulsawaya/",
+                "https://elsewhere.zone",
+                "The multiplayer roguelike of your dreams."
+            ],
+            [
+                "",
+                "Househunt",
+                "COHORT 003",
+                "Austin, TX",
+                "Ankith",
+                "https://www.linkedin.com/in/nitin-rajinikanth-94404250/",
+                "https://playhousehunt.com",
+                "Monopoly with real houses."
+            ],
+            [
+                "",
+                "Level Headed Games",
+                "COHORT 003",
+                "Seattle, WA",
+                "Leah",
+                "https://www.linkedin.com/in/leah-hoyer/",
+                "https://levelheadedgames.com/",
+                "Reinventing online multiplayer for the future."
+            ],
+            [
+                "",
+                "Matchday",
+                "COHORT 003",
+                "San Francisco, CA",
+                "Derrick",
+                "https://www.linkedin.com/in/derrickk/",
+                "https://matchday.com",
+                "Interactive entertainment for 5B soccer fans."
+            ],
+            [
+                "",
+                "NoMi",
+                "COHORT 003",
+                "London, UK",
+                "Lailla",
+                "https://www.linkedin.com/in/lailla",
+                "https://www.nomi.fyi",
+                "Therapy via game mechanics."
+            ],
+            [
+                "",
+                "Nilo Technologies",
+                "COHORT 003",
+                "Delaware",
+                "Nuno",
+                "https://www.linkedin.com/in/nunopleiria/",
+                "https://nunoleiria.com",
+                "Create 3D worlds in seconds."
+            ],
+            [
+                "",
+                "Spekter Games",
+                "COHORT 003",
+                "San Francisco, CA",
+                "Taehoon",
+                "https://www.linkedin.com/in/thtkim/",
+                "https://spekter.games/",
+                "Next-gen Telegram game publisher."
+            ],
+            [
+                "",
+                "Voidpet",
+                "COHORT 003",
+                "Austin, TX",
+                "Linda",
+                "https://www.linkedin.com/in/linda-sc/",
+                "https://voidpet.com/",
+                "Emotional monsters game."
+            ],
+            [
+                "",
+                "Alpaka Games",
+                "COHORT 004",
+                "Istanbul, Turkey",
+                "Can",
+                "https://www.linkedin.com/in/g%C3%B6ktu%C4%9F-can-aksoy/",
+                "https://alpakagames.co",
+                "Creating the next generation of hit Action mobile games."
+            ],
+            [
+                "",
+                "Communion",
+                "COHORT 004",
+                "Venice, CA",
+                "Jackson",
+                "https://www.linkedin.com/in/berries/",
+                "https://communion.games",
+                "Creating *Altar* — a social deduction royale."
+            ],
+            [
+                "",
+                "Double Dusk",
+                "COHORT 004",
+                "Delaware (Remote)",
+                "Alexander",
+                "https://www.linkedin.com/in/amist7/",
+                "https://doubledusk.com/",
+                "Character-based 2-player co-op games."
+            ],
+            [
+                "",
+                "Echo Chunk",
+                "COHORT 004",
+                "San Francisco, CA",
+                "Sami",
+                "https://www.linkedin.com/in/samiramly/",
+                "https://echochunk.com",
+                "\"Wordle for Chess\" — AI strategy games that generate themselves."
+            ],
+            [
+                "",
+                "Flat2VR Studios",
+                "COHORT 004",
+                "Florida",
+                "Jasmine",
+                "https://www.linkedin.com/in/jasmineuniza/",
+                "https://flat2vrstudios.com",
+                "Bringing classic games to VR."
+            ],
+            [
+                "",
+                "GG Folks",
+                "COHORT 004",
+                "San Francisco, CA",
+                "Daniel",
+                "https://www.linkedin.com/in/capncleaver/",
+                "https://puzzlewizards.net",
+                "Cross-platform cult MMOs like Puzzle Pirates."
+            ],
+            [
+                "",
+                "Incite Interactive",
+                "COHORT 004",
+                "Redwood City, CA",
+                "Andrew",
+                "https://www.linkedin.com/in/mobile-pm/",
+                "https://incite.dev",
+                "AuraVale — agentic life simulation."
+            ],
+            [
+                "",
+                "Kitbash",
+                "COHORT 004",
+                "Kansas",
+                "Riley",
+                "https://www.linkedin.com/in/rileydutton/",
+                "https://wyld.land",
+                "AI-powered remixing to unlock game dev in everyone."
+            ],
+            [
+                "",
+                "Story Engine Inc.",
+                "COHORT 004",
+                "Stanford, CA",
+                "Wan Rong",
+                "https://www.linkedin.com/in/wanrong-he/",
+                null,
+                "AI-native anime & webtoons for Gen Z."
+            ],
+            [
+                "",
+                "Talofa Games",
+                "COHORT 004",
+                "San Francisco, CA",
+                "Jenny",
+                "https://www.linkedin.com/in/xujennyc/",
+                "https://www.talofagames.com",
+                "Roblox for Fitness."
+            ],
+            [
+                "",
+                "Trass Games",
+                "COHORT 004",
+                "San Francisco, CA",
+                "Jack",
+                "https://www.linkedin.com/in/jack-southard-vr/",
+                "https://yeeps.com",
+                "Top 10 Meta Quest game *Yeeps* (Minecraft × Gorilla Tag)."
+            ],
+            [
+                "",
+                "VRL",
+                "COHORT 004",
+                "Santa Monica, CA",
+                "Raj",
+                "https://linkedin.com/in/virraj",
+                "https://vrl.games",
+                "Games that go viral."
+            ],
+            [
+                "",
+                "Braid",
+                "COHORT 005",
+                "San Francisco, CA",
+                "Quinn Li",
+                "https://www.linkedin.com/in/qloshea/",
+                "https://braidhr.com",
+                "Boosting employee productivity and engagement with play!"
+            ],
+            [
+                "",
+                "Crater Studios",
+                "COHORT 005",
+                "Apex, NC",
+                "Noni Amnon",
+                "https://www.linkedin.com/in/amnon-israel/",
+                "https://www.craterstudiosgames.com/",
+                "Micro-AAA game studio delivering high-quality games fast."
+            ],
+            [
+                "",
+                "Definitely Games",
+                "COHORT 005",
+                "Los Angeles, CA",
+                "Charlie",
+                "https://www.linkedin.com/in/-charlie-tran-/",
+                "https://def.games",
+                "Future of online coop games."
+            ],
+            [
+                "",
+                "First Day Entertainment",
+                "COHORT 005",
+                "Sunnyvale, CA",
+                "Stephen",
+                "https://www.linkedin.com/in/zhen-stephen-gou/",
+                "https://www.firstdayentertainment.net/",
+                "Pioneering AI-powered games."
+            ],
+            [
+                "",
+                "Magic Circle",
+                "COHORT 005",
+                "San Francisco, CA",
+                "Avi",
+                "https://linkedin.com/in/aviromanoff",
+                "https://magiccircle.gg",
+                "AI games for best friends to play together."
+            ],
+            [
+                "",
+                "Parhelion",
+                "COHORT 005",
+                "Michigan",
+                "Andrew",
+                "https://www.linkedin.com/in/andrew-yang-985ba02b/",
+                "https://www.parhelion.gg/",
+                "Revolutionize anime through games & tech."
+            ],
+            [
+                "",
+                "Sloyd",
+                "COHORT 005",
+                "Austin, TX",
+                "Andreas",
+                "https://www.linkedin.com/in/edesberg/",
+                "https://Sloyd.ai",
+                "Generate 3D models fast & easy."
+            ],
+            [
+                "",
+                "Unleashed Games",
+                "COHORT 005",
+                "Rhode Island",
+                "Irena",
+                "https://www.linkedin.com/in/irenapereira/",
+                "https://www.unleashedgames.com",
+                "Making games that bring people together."
+            ],
+            [
+                "",
+                "Variant",
+                "COHORT 005",
+                "San Francisco, CA",
+                "Zoe",
+                "https://www.linkedin.com/in/zoedlynch/",
+                "https://www.tryvariant.ai/",
+                "Social platform for playable content."
+            ]
+        ]
+    },
+    "recent raised series B": {
+        "columns": [
+            "是否通过linked申请?",
+            "Organization Name",
+            "Organization Industries",
+            "Organization Location",
+            "Funding Type",
+            "Money Raised",
+            "Money Raised Currency",
+            "Money Raised (in USD)",
+            "Announced Date",
+            "Description",
+            "Funding Stage",
+            "Lead Investors",
+            "Investor Names",
+            "Funding Status",
+            "Transaction Name",
+            "CEO Name",
+            "CEO Linkedin",
+            "Company Website",
+            "Unnamed: 17"
+        ],
+        "data": [
+            [
+                "",
+                "Syncari",
+                "Health Care, Information Technology, Internet, Manufacturing, SaaS, Software, Wholesale",
+                "Newark, California, United States, North America",
+                "Series B",
+                null,
+                null,
+                null,
+                "2025-09-10",
+                "Syncari raised an undisclosed amount on 2025-09-10 in Series B",
+                "Early Stage Venture",
+                "Escape Investment Management",
+                "Escape Investment Management",
+                "Early Stage Venture",
+                "Series B - Syncari",
+                "Nick Bonfiglio",
+                "https://www.linkedin.com/in/nickbonfiglio",
+                "https://syncari.com/",
+                1.0
+            ],
+            [
+                "",
+                "Ketryx",
+                "Artificial Intelligence (AI), Business Process Automation (BPA), Compliance, SaaS, Software",
+                "Cambridge, Massachusetts, United States, North America",
+                "Series B",
+                39000000.0,
+                "USD",
+                39000000.0,
+                "2025-09-04",
+                "Ketryx raised $39000000 on 2025-09-04 in Series B",
+                "Early Stage Venture",
+                "Transformation Capital",
+                "53 Stations, E14 Fund, Lightspeed Venture Partners, Transformation Capital, Ubiquity Ventures, William A. Hawkins",
+                "Early Stage Venture",
+                "Series B - Ketryx",
+                "Erez Kaminski",
+                "https://www.linkedin.com/in/erezkaminski",
+                "https://www.ketryx.com/",
+                1.0
+            ],
+            [
+                "",
+                "Albiware",
+                "Cloud Management, SaaS, Software",
+                "Downers Grove, Illinois, United States, North America",
+                "Series B",
+                null,
+                null,
+                null,
+                "2025-08-12",
+                "Albiware raised an undisclosed amount on 2025-08-12 in Series B",
+                "Early Stage Venture",
+                "Frontier Growth",
+                "Frontier Growth",
+                "Early Stage Venture",
+                "Series B - Albiware",
+                "Alex Duta",
+                "https://www.linkedin.com/in/itsalexduta",
+                "https://albiware.com/",
+                1.0
+            ],
+            [
+                "",
+                "Rillet",
+                "Accounting, Artificial Intelligence (AI), Enterprise Resource Planning (ERP), Finance, Financial Services, FinTech, SaaS",
+                "Palo Alto, California, United States, North America",
+                "Series B",
+                70000000.0,
+                "USD",
+                70000000.0,
+                "2025-08-06",
+                "Rillet raised $70000000 on 2025-08-06 in Series B",
+                "Early Stage Venture",
+                "Andreessen Horowitz, ICONIQ Capital",
+                "Andreessen Horowitz, FOG Ventures, ICONIQ Capital, Oak HC/FT, Sequoia Capital",
+                "Early Stage Venture",
+                "Series B - Rillet",
+                "Nicolas Kopp",
+                "https://www.linkedin.com/in/nicolas-kopp/",
+                "https://www.rillet.com/",
+                1.0
+            ],
+            [
+                "",
+                "Sparrow",
+                "Employee Benefits, Human Resources, Productivity Tools, SaaS, Software",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                35000000.0,
+                "USD",
+                35000000.0,
+                "2025-07-29",
+                "Sparrow raised $35000000 on 2025-07-29 in Series B",
+                "Early Stage Venture",
+                "SLW",
+                "SLW",
+                "Early Stage Venture",
+                "Series B - Sparrow",
+                "Deborah Hanus",
+                "https://www.linkedin.com/in/deborahhanus",
+                "https://sparrow.com/",
+                1.0
+            ],
+            [
+                "",
+                "Reveal Technology",
+                "Analytics, Artificial Intelligence (AI), Public Safety, SaaS, Software",
+                "Bozeman, Montana, United States, North America",
+                "Series B",
+                30000000.0,
+                "USD",
+                30000000.0,
+                "2025-07-29",
+                "Reveal Technology raised $30000000 on 2025-07-29 in Series B",
+                "Early Stage Venture",
+                "Ballistic Ventures",
+                "Ballistic Ventures, Booz Allen Ventures, Defy.vc, Madison Valley Partners, NEXT Frontier Capital, Shield Capital",
+                "Early Stage Venture",
+                "Series B - Reveal Technology",
+                "Garrett Smith",
+                "https://www.linkedin.com/in/wgarrettsmith/",
+                "https://www.revealtech.ai/",
+                1.0
+            ],
+            [
+                "",
+                "Blink Ops",
+                "Artificial Intelligence (AI), Cloud Security, Cyber Security, Productivity Tools, SaaS",
+                "Austin, Texas, United States, North America",
+                "Series B",
+                50000000.0,
+                "USD",
+                50000000.0,
+                "2025-07-28",
+                "Blink Ops raised $50000000 on 2025-07-28 in Series B",
+                "Early Stage Venture",
+                "O.G. Venture Partners",
+                "Hetz Ventures, Lightspeed Venture Partners, O.G. Venture Partners, Vertex Growth Fund",
+                "Early Stage Venture",
+                "Series B - Blink Ops",
+                "Gil Barak",
+                "https://www.linkedin.com/in/gilbarak",
+                "https://www.blinkops.com/",
+                1.0
+            ],
+            [
+                "",
+                "Dropzone AI",
+                "Artificial Intelligence (AI), Cyber Security, SaaS",
+                "Seattle, Washington, United States, North America",
+                "Series B",
+                37000000.0,
+                "USD",
+                37000000.0,
+                "2025-07-17",
+                "Dropzone AI raised $37000000 on 2025-07-17 in Series B",
+                "Early Stage Venture",
+                "Theory Ventures",
+                "Decibel Partners, IQT, Madrona, Pioneer Square Labs, Theory Ventures",
+                "Early Stage Venture",
+                "Series B - Dropzone AI",
+                "Edward Wu",
+                "https://www.linkedin.com/in/edwardxwu",
+                "https://www.dropzone.ai/",
+                1.0
+            ],
+            [
+                "",
+                "OpenEvidence",
+                "Artificial Intelligence (AI), Clinical Trials, Medical, SaaS",
+                "Cambridge, Massachusetts, United States, North America",
+                "Series B",
+                210000000.0,
+                "USD",
+                210000000.0,
+                "2025-07-15",
+                "OpenEvidence raised $210000000 on 2025-07-15 in Series B",
+                "Early Stage Venture",
+                "GV, Kleiner Perkins",
+                "Coatue, Conviction, GV, Kleiner Perkins, Sequoia Capital, Thrive Capital",
+                "Early Stage Venture",
+                "Series B - OpenEvidence",
+                "Daniel Nadler",
+                "https://www.linkedin.com/in/danielnadler",
+                "https://www.openevidence.com/",
+                1.0
+            ],
+            [
+                "",
+                "SuperAnnotate",
+                "Artificial Intelligence (AI), Computer Vision, Data Collection and Labeling, Generative AI, Machine Learning, Natural Language Processing, SaaS, Software",
+                "San Mateo, California, United States, North America",
+                "Series B",
+                13500000.0,
+                "USD",
+                13500000.0,
+                "2025-07-15",
+                "SuperAnnotate raised $13500000 on 2025-07-15 in Series B",
+                "Early Stage Venture",
+                "Dell Technologies Capital",
+                "Dell Technologies Capital",
+                "Early Stage Venture",
+                "Series B - SuperAnnotate",
+                "Vahan Petrosyan",
+                "https://www.linkedin.com/in/vahanp",
+                "https://www.superannotate.com/",
+                1.0
+            ],
+            [
+                "",
+                "NetBox Labs",
+                "Information Technology, Open Source, Professional Networking, SaaS",
+                "New York, New York, United States, North America",
+                "Series B",
+                35000000.0,
+                "USD",
+                35000000.0,
+                "2025-07-14",
+                "NetBox Labs raised $35000000 on 2025-07-14 in Series B",
+                "Early Stage Venture",
+                "NGP Capital",
+                "Flybridge, Headline, IBM, Mango Capital, NGP Capital, Notable Capital, Salesforce Ventures, Sorenson Capital, Two Sigma Ventures",
+                "Early Stage Venture",
+                "Series B - NetBox Labs",
+                " Kris Beevers",
+                "https://www.linkedin.com/in/beevek/",
+                "https://netboxlabs.com/",
+                1.0
+            ],
+            [
+                "",
+                "Levelpath",
+                "Artificial Intelligence (AI), Procurement, Productivity Tools, SaaS",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                55000000.0,
+                "USD",
+                55000000.0,
+                "2025-06-30",
+                "Levelpath raised $55000000 on 2025-06-30 in Series B",
+                "Early Stage Venture",
+                "Battery Ventures",
+                "01 Advisors, Battery Ventures, Benchmark, NewView Capital, Redpoint, World Innovation Lab",
+                "Early Stage Venture",
+                "Series B - Levelpath",
+                "Alex Yakubovich",
+                "https://www.linkedin.com/in/alex-yakubovich",
+                "https://www.levelpath.com/",
+                1.0
+            ],
+            [
+                "",
+                "Sedai",
+                "Artificial Intelligence (AI), Cloud Computing, Cloud Management, Developer Tools, DevOps, Information Technology, SaaS, Software",
+                "Pleasanton, California, United States, North America",
+                "Series B",
+                20000000.0,
+                "USD",
+                20000000.0,
+                "2025-06-16",
+                "Sedai raised $20000000 on 2025-06-16 in Series B",
+                "Early Stage Venture",
+                "AVP",
+                "AVP, Norwest Venture Partners, Sierra Ventures, Uncorrelated Ventures",
+                "Early Stage Venture",
+                "Series B - Sedai",
+                "Suresh Mathew",
+                "https://www.linkedin.com/in/sureshmathew",
+                "https://www.sedai.io/",
+                1.0
+            ],
+            [
+                "",
+                "Nominal",
+                "Information Technology, SaaS, Software",
+                "Austin, Texas, United States, North America",
+                "Series B",
+                75000000.0,
+                "USD",
+                75000000.0,
+                "2025-06-12",
+                "Nominal raised $75000000 on 2025-06-12 in Series B",
+                "Early Stage Venture",
+                "Sequoia Capital",
+                "Founders Fund, General Catalyst, Lightspeed Venture Partners, Lux Capital, Sequoia Capital",
+                "Early Stage Venture",
+                "Series B - Nominal",
+                "Guy Leibovitz",
+                "https://www.linkedin.com/in/guylaybovich",
+                "https://www.nominal.so/",
+                1.0
+            ],
+            [
+                "",
+                "Conveyor",
+                "Artificial Intelligence (AI), Cloud Security, Compliance, Cyber Security, Risk Management, SaaS, Sales Automation, Software",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                20000000.0,
+                "USD",
+                20000000.0,
+                "2025-06-12",
+                "Conveyor raised $20000000 on 2025-06-12 in Series B",
+                "Early Stage Venture",
+                "SignalFire",
+                "Cervin Ventures, Oregon Venture Fund, SignalFire",
+                "Early Stage Venture",
+                "Series B - Conveyor",
+                "Chas Ballew",
+                "https://www.linkedin.com/in/chasballew",
+                "https://www.conveyor.com/",
+                1.0
+            ],
+            [
+                "",
+                "Abacum",
+                "Financial Services, FinTech, Information Technology, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                60000000.0,
+                "USD",
+                60000000.0,
+                "2025-06-11",
+                "Abacum raised $60000000 on 2025-06-11 in Series B",
+                "Early Stage Venture",
+                "Scale Venture Partners",
+                "Atomico, Cathay Innovation, Creandum, FJ Labs, K Fund, PROfounders Capital, s16vc, Scale Venture Partners, Y Combinator",
+                "Early Stage Venture",
+                "Series B - Abacum",
+                "Julio Martínez",
+                "https://www.linkedin.com/in/thejuliomartinez/",
+                "https://www.abacum.ai/",
+                1.0
+            ],
+            [
+                "",
+                "Pallet",
+                "Artificial Intelligence (AI), Business Intelligence, Fleet Management, Logistics, SaaS, Supply Chain Management, Warehousing",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                27000000.0,
+                "USD",
+                27000000.0,
+                "2025-05-27",
+                "Pallet raised $27000000 on 2025-05-27 in Series B",
+                "Early Stage Venture",
+                "General Catalyst",
+                "Aatish Nayak, Activant Capital, Amit Agarwal, Bain Capital Ventures, Bessemer Venture Partners, Dan Lewis, General Catalyst, Girish Rishi, Matt Mckinney, Michael Capellas, Sahin Boydas",
+                "Early Stage Venture",
+                "Series B - Pallet",
+                "Sushanth Raman",
+                "https://www.linkedin.com/in/sushanth-raman",
+                "https://www.pallet.com/",
+                1.0
+            ],
+            [
+                "",
+                "StackHawk",
+                "Developer APIs, Developer Tools, DevOps, SaaS, Security, Software",
+                "Denver, Colorado, United States, North America",
+                "Series B",
+                12000000.0,
+                "USD",
+                12000000.0,
+                "2025-05-22",
+                "StackHawk raised $12000000 on 2025-05-22 in Series B",
+                "Early Stage Venture",
+                "Alumni Ventures, Costanoa Ventures, Sapphire Ventures",
+                "Alumni Ventures, Costanoa Ventures, Sapphire Ventures",
+                "Early Stage Venture",
+                "Series B - StackHawk",
+                "Joni Klippert",
+                "https://www.linkedin.com/in/joniklippert",
+                "https://www.stackhawk.com/",
+                1.0
+            ],
+            [
+                "",
+                "Awardco",
+                "B2B, Employee Benefits, Human Resources, SaaS",
+                "Lindon, Utah, United States, North America",
+                "Series B",
+                165000002.0,
+                "USD",
+                165000002.0,
+                "2025-05-20",
+                "Awardco raised $165000002 on 2025-05-20 in Series B",
+                "Early Stage Venture",
+                "Sixth Street, Spectrum Equity",
+                "General Catalyst, Ryan Smith, Sixth Street, Spectrum Equity",
+                "Early Stage Venture",
+                "Series B - Awardco",
+                "Steve Sonnenberg",
+                "https://www.linkedin.com/in/stevesonnenberg",
+                "https://www.awardco.com/",
+                1.0
+            ],
+            [
+                "",
+                "Graphiant",
+                "Artificial Intelligence (AI), Network Security, SaaS",
+                "San Jose, California, United States, North America",
+                "Series B",
+                19000000.0,
+                "USD",
+                19000000.0,
+                "2025-05-19",
+                "Graphiant raised $19000000 on 2025-05-19 in Series B",
+                "Early Stage Venture",
+                "tali ventures, Wa’ed Ventures",
+                "IAG Capital Partners, Sequoia Capital, tali ventures, Two Bear Capital, Wa’ed Ventures",
+                "Early Stage Venture",
+                "Series B - Graphiant",
+                "Khalid Raza",
+                "https://www.linkedin.com/in/khalidraza",
+                "https://www.graphiant.com/",
+                1.0
+            ],
+            [
+                "",
+                "Towns",
+                "Information Technology, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                10000000.0,
+                "USD",
+                10000000.0,
+                "2025-04-11",
+                "Towns raised $10000000 on 2025-04-11 in Series B",
+                "Early Stage Venture",
+                "a16z crypto",
+                "a16z crypto, Benchmark, Coinbase Ventures",
+                null,
+                "Series B - Towns",
+                "Ben Rubin",
+                "https://www.linkedin.com/in/rubinben/",
+                "https://www.towns.com/",
+                1.0
+            ],
+            [
+                "",
+                "incident.io",
+                "Information Technology, Productivity Tools, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                62000000.0,
+                "USD",
+                62000000.0,
+                "2025-04-10",
+                "incident.io raised $62000000 on 2025-04-10 in Series B",
+                "Early Stage Venture",
+                "Insight Partners",
+                "Index Ventures, Insight Partners, MANTIS Venture Capital, Mike Krieger, Point Nine",
+                "Early Stage Venture",
+                "Series B - incident.io",
+                "Stephen Whitworth",
+                "https://www.linkedin.com/in/stephenwhitworth/",
+                "https://incident.io/",
+                1.0
+            ],
+            [
+                "",
+                "Tessell",
+                "Data Management, Database, SaaS, Software",
+                "San Ramon, California, United States, North America",
+                "Series B",
+                60000000.0,
+                "USD",
+                60000000.0,
+                "2025-04-09",
+                "Tessell raised $60000000 on 2025-04-09 in Series B",
+                "Early Stage Venture",
+                "WestBridge Capital",
+                "B37 Ventures, Lightspeed Venture Partners, Rocketship.vc, WestBridge Capital",
+                "Early Stage Venture",
+                "Series B - Tessell",
+                "Bala Kuchibhotla",
+                "https://www.linkedin.com/in/bala-kuchibhotla",
+                "https://www.tessell.com/",
+                1.0
+            ],
+            [
+                "",
+                "Anecdotes",
+                "Artificial Intelligence (AI), Compliance, Cyber Security, Data Governance, Risk Management, SaaS",
+                "Palo Alto, California, United States, North America",
+                "Series B",
+                30000000.0,
+                "USD",
+                30000000.0,
+                "2025-04-08",
+                "Anecdotes raised $30000000 on 2025-04-08 in Series B",
+                "Early Stage Venture",
+                "DTCP",
+                "DTCP, Glilot Capital Partners, Red Dot Capital Partners, Vertex Ventures",
+                "Early Stage Venture",
+                "Series B - Anecdotes",
+                "Yair Kuznitsov",
+                "https://www.linkedin.com/in/yair-kuznitsov/",
+                "https://www.anecdotes.ai/",
+                1.0
+            ],
+            [
+                "",
+                "Arena",
+                "Enterprise Software, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                30000000.0,
+                "USD",
+                30000000.0,
+                "2025-04-08",
+                "Arena raised $30000000 on 2025-04-08 in Series B",
+                "Early Stage Venture",
+                "Fifth Down Capital, Goldcrest Capital, Initialized Capital",
+                "Fifth Down Capital, Founders Fund, Friends & Family Capital, Garuda Ventures, Goldcrest Capital, Initialized Capital, Michael Seibel, Qasar Younis, Shield Capital",
+                "Early Stage Venture",
+                "Series B - Arena",
+                "Paulo Martins",
+                "https://www.linkedin.com/in/pauloxm",
+                "https://www.arena.im/",
+                1.0
+            ],
+            [
+                "",
+                "Omni",
+                "Business Intelligence, Information Technology, SaaS, Software",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                69000000.0,
+                "USD",
+                69000000.0,
+                "2025-03-13",
+                "Omni raised $69000000 on 2025-03-13 in Series B",
+                "Early Stage Venture",
+                "ICONIQ Growth",
+                "First Round Capital, GV, ICONIQ Growth, Redpoint, Snowflake Ventures, Theory Ventures",
+                "Early Stage Venture",
+                "Series B - Omni",
+                "Colin Zima",
+                "https://www.linkedin.com/in/colinzima",
+                "https://omni.co/",
+                1.0
+            ],
+            [
+                "",
+                "Regie.ai",
+                "Artificial Intelligence (AI), Business Information Systems, Marketing, SaaS, Sales",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                30000000.0,
+                "USD",
+                30000000.0,
+                "2025-02-26",
+                "Regie.ai raised $30000000 on 2025-02-26 in Series B",
+                "Early Stage Venture",
+                "Foundation Capital, Scale Venture Partners",
+                "Foundation Capital, Khosla Ventures, Scale Venture Partners, South Park Commons, StepStone Group, TriplePoint Capital",
+                "Early Stage Venture",
+                "Series B - Regie.ai",
+                "Srinath Sridhar",
+                "https://www.linkedin.com/in/sridharsrinath",
+                "https://www.regie.ai/",
+                1.0
+            ],
+            [
+                "",
+                "Camber",
+                "Data Integration, Enterprise Software, Health Care, Health Insurance, Mental Health, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                30000000.0,
+                "USD",
+                30000000.0,
+                "2025-02-26",
+                "Camber raised $30000000 on 2025-02-26 in Series B",
+                "Early Stage Venture",
+                "Andreessen Horowitz",
+                "ACME Capital, Andreessen Horowitz, Craft Ventures, Darkmode Ventures, K. Ventures, Y Combinator",
+                "Early Stage Venture",
+                "Series B - Camber",
+                "Christophe Rimann",
+                "https://www.linkedin.com/in/christopherimann",
+                "https://www.camber.health/",
+                1.0
+            ],
+            [
+                "",
+                "Auditoria.AI",
+                "Artificial Intelligence (AI), Finance, FinTech, Machine Learning, SaaS, Software",
+                "San Jose, California, United States, North America",
+                "Series B",
+                38000000.0,
+                "USD",
+                38000000.0,
+                "2025-02-24",
+                "Auditoria.AI raised $38000000 on 2025-02-24 in Series B",
+                "Early Stage Venture",
+                "Innovius Capital",
+                "Dell Technologies Capital, Engineering Capital, Innovius Capital, KPMG, Neotribe Ventures, Sentinel Global, Venrock",
+                "Early Stage Venture",
+                "Series B - Auditoria.AI",
+                "Rohit Gupta",
+                "https://www.linkedin.com/in/rmgupta",
+                "https://www.auditoria.ai/",
+                1.0
+            ],
+            [
+                "",
+                "N5 Now",
+                "Banking, Consulting, CRM, Finance, Financial Services, FinTech, Insurance, PaaS, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                20000000.0,
+                "USD",
+                20000000.0,
+                "2025-02-20",
+                "N5 Now raised $20000000 on 2025-02-20 in Series B",
+                "Early Stage Venture",
+                null,
+                "Alexia Ventures, ArpexCapital, Exor Ventures, Illuminate Financial, LTS Investments, Madrone Capital Partners, Overboost, Scale-Up Ventures",
+                "Early Stage Venture",
+                "Series B - N5 Now",
+                "Julián Colombo",
+                "https://www.linkedin.com/in/juliancolombo",
+                "https://n5now.com/",
+                null
+            ],
+            [
+                "",
+                "Sanas",
+                "Artificial Intelligence (AI), Language Learning, SaaS, Software, Translation Service",
+                "Palo Alto, California, United States, North America",
+                "Series B",
+                65000000.0,
+                "USD",
+                65000000.0,
+                "2025-02-19",
+                "Sanas raised $65000000 on 2025-02-19 in Series B",
+                "Early Stage Venture",
+                "Quadrille Capital, Teleperformance",
+                "Alorica, DN Capital, Insight Partners, Quadrille Capital, Quiet Capital, Teleperformance",
+                "Early Stage Venture",
+                "Series B - Sanas",
+                "Maxim Serebryakov",
+                "https://www.linkedin.com/in/maximser",
+                "https://www.sanas.ai/",
+                1.0
+            ],
+            [
+                "",
+                "Comulate",
+                "Artificial Intelligence (AI), FinTech, Insurance, SaaS, Software",
+                "San Francisco, California, United States, North America",
+                "Series B",
+                20000000.0,
+                "USD",
+                20000000.0,
+                "2025-02-11",
+                "Comulate raised $20000000 on 2025-02-11 in Series B",
+                "Early Stage Venture",
+                "Bond, Workday Ventures",
+                "Bond, Flybridge, Jonathan Crystal, Neo, Qasar Younis, Spark Capital, Workday Ventures, Zachary Perret",
+                "Early Stage Venture",
+                "Series B - Comulate",
+                "Jordan Katz",
+                "https://www.linkedin.com/in/jordankz",
+                "https://www.comulate.com/",
+                1.0
+            ],
+            [
+                "",
+                "Hypori",
+                "Cyber Security, SaaS, Software, Virtualization",
+                "Reston, Virginia, United States, North America",
+                "Series B",
+                12000000.0,
+                "USD",
+                12000000.0,
+                "2025-01-28",
+                "Hypori raised $12000000 on 2025-01-28 in Series B",
+                "Early Stage Venture",
+                null,
+                "AE Industrial Partners, Carahsoft Technology, UBS",
+                "Early Stage Venture",
+                "Series B - Hypori",
+                "Jared N. Shepard",
+                "https://www.linkedin.com/in/shepardj",
+                "https://www.hypori.com/",
+                1.0
+            ],
+            [
+                "",
+                "Prophecy.io",
+                "Analytics, Cloud Data Services, Enterprise Software, Information Technology, SaaS",
+                "Palo Alto, California, United States, North America",
+                "Series B",
+                47000000.0,
+                "USD",
+                47000000.0,
+                "2025-01-16",
+                "Prophecy.io raised $47000000 on 2025-01-16 in Series B",
+                "Early Stage Venture",
+                "Smith Point Capital",
+                "Berkeley SkyDeck Fund, Dallas Venture Capital, HSBC, Insight Partners, JP Morgan Chase, SignalFire, Smith Point Capital",
+                "Early Stage Venture",
+                "Series B - Prophecy.io",
+                "Raj Bains",
+                "https://www.linkedin.com/in/raj-bains-b837a46/",
+                "https://www.prophecy.io/",
+                1.0
+            ],
+            [
+                "",
+                "OnPay",
+                "Bookkeeping and Payroll, Employee Benefits, Financial Services, FinTech, Human Resources, SaaS, Software",
+                "Atlanta, Georgia, United States, North America",
+                "Series B",
+                63000000.0,
+                "USD",
+                63000000.0,
+                "2025-01-07",
+                "OnPay raised $63000000 on 2025-01-07 in Series B",
+                "Early Stage Venture",
+                "Carrick Capital Partners",
+                "AB Private Credit Investors, Carrick Capital Partners",
+                "Early Stage Venture",
+                "Series B - OnPay",
+                "Jesse Burgess",
+                "https://www.linkedin.com/in/jesse-burgess-09a39453",
+                "https://onpay.com/",
+                1.0
+            ],
+            [
+                "",
+                "Nfinite",
+                "3D Technology, Artificial Intelligence (AI), E-Commerce, Generative AI, Retail Technology, SaaS, Software",
+                "New York, New York, United States, North America",
+                "Series B",
+                null,
+                null,
+                null,
+                "2025-01-01",
+                "Nfinite raised an undisclosed amount on 2025-01-01 in Series B",
+                "Early Stage Venture",
+                null,
+                "Tobias Halloran",
+                "Early Stage Venture",
+                "Series B - Nfinite",
+                "Alexandre de Vigan",
+                "https://www.linkedin.com/in/alexandre-de-vigan-26388015/",
+                "https://www.nfinite.app/",
+                1.0
+            ]
+        ]
+    },
+    "Seed Stage VC": {
+        "columns": [
+            "是否通过linked申请?",
+            "VC Name",
+            "Partner",
+            "Linkedin",
+            "Linkedin Request?",
+            "Connected?",
+            "Industry"
+        ],
+        "data": [
+            [
+                "",
+                "1Sharpe Ventures",
+                "Gregor Watson",
+                "https://www.linkedin.com/in/gregor-watson-b5abb68/",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "468 Capital",
+                "Florian Leibert",
+                "https://www.linkedin.com/in/florianleibert",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "8-Bit Capital",
+                "Jonathan Abrams",
+                "https://www.linkedin.com/in/jonathanabrams",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "8VC",
+                "Joe Lonsdale",
+                "https://www.linkedin.com/in/jtlonsdale",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Act One Ventures",
+                "Michael Silton",
+                "https://www.linkedin.com/in/michaelsilton",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Alumni Ventures",
+                "Michael Collins",
+                "https://www.linkedin.com/in/mike-collins-362100",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Amazon Industrial Innovation Fund",
+                "Franziska Bossart",
+                "https://www.linkedin.com/in/franziska-bossart-b3799153",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Amex Ventures",
+                "Margaret Lim",
+                "https://www.linkedin.com/in/margaret-lim-amex",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Base10 Partners",
+                "Adeyemi Ajao",
+                "https://www.linkedin.com/in/adeyemiajao",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Big Brain Holdings",
+                "Sam Kim",
+                "https://uk.linkedin.com/in/ksm-sam-kim",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Blockchange Ventures",
+                "Ken Seiff",
+                "https://www.linkedin.com/in/seiff",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Blank Ventures",
+                "Hannah Chelkowski",
+                "https://www.linkedin.com/in/hannahchelkowski",
+                "sent",
+                "yes"
+            ],
+            [
+                "",
+                "Cervin Ventures",
+                "Neeraj Gupta",
+                "https://www.linkedin.com/in/neerajgupta123",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "CoinFund",
+                "Jake Brukhman",
+                "https://www.linkedin.com/in/jake-brukhman-6037867",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Comma Capital",
+                "David Ongchoco",
+                "https://www.linkedin.com/in/davidongchoco",
+                "sent",
+                "yes"
+            ],
+            [
+                "",
+                "Construct Capital",
+                "Dayna Grayson",
+                "https://www.linkedin.com/in/daynagrayson",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Correlation Ventures",
+                "David Coats",
+                "https://www.linkedin.com/in/david-coats-2a26b66",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Costanoa Ventures",
+                "Greg Sands",
+                "https://www.linkedin.com/in/gregsands",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Coho Deeptech",
+                "Jennifer Zhai",
+                "https://www.linkedin.com/in/jenniferyichenzhai",
+                "sent",
+                null
+            ],
+            [
+                "",
+                "Convective Capital",
+                "Bill Clerico",
+                "https://www.linkedin.com/in/billclerico/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "DNX Ventures",
+                "Hiro Rio Maeda",
+                "https://www.linkedin.com/in/hiroriomaeda/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Eniac Ventures",
+                "Hadley Harris",
+                "https://www.linkedin.com/in/hadleyharris",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Era Ventures",
+                "Clelia Warburg Peters",
+                "https://www.linkedin.com/in/cleliapeters",
+                null,
+                null
+            ],
+            [
+                "",
+                "Everywhere Ventures",
+                "Jenny Fielding",
+                "https://www.linkedin.com/in/jennyfielding",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Failup Ventures",
+                "Jesse Heikkilä",
+                "https://www.linkedin.com/in/heikkilajesse",
+                "1",
+                null
+            ],
+            [
+                "",
+                "FJ Labs",
+                "Fabrice Grinda",
+                "https://www.linkedin.com/in/fabricegrinda",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Felicis",
+                "Aydin Senkut",
+                "https://www.linkedin.com/in/aydins/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Frazier Group",
+                "Scott Frazier",
+                "https://www.linkedin.com/in/scott-frazier-51823",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Framework Ventures",
+                "Vance Spencer",
+                "https://www.linkedin.com/in/vance-spencer-978b4579",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Foundation Capital",
+                "Charles Moldow",
+                "https://www.linkedin.com/in/charlesmoldow",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Forerunner",
+                "Kirsten Green",
+                "https://www.linkedin.com/in/kirstengreen",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Flybridge",
+                "Jeff Bussgang",
+                "https://www.linkedin.com/in/bussgang",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Fusion Fund",
+                "Lu Zhang",
+                "https://www.linkedin.com/in/luzhangvc",
+                "1",
+                "1"
+            ],
+            [
+                "",
+                "First Round Capital",
+                "Josh Kopelman",
+                "https://www.linkedin.com/in/jkopelman",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Florida Funders",
+                "Tom Wallace",
+                "https://www.linkedin.com/in/tom-wallace-568412",
+                "1",
+                null
+            ],
+            [
+                "",
+                "GFR Fund",
+                "Teppei Tsutsui",
+                "https://www.linkedin.com/in/teppeitsutsui",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Garuda Ventures",
+                "Rishi Taparia",
+                "https://www.linkedin.com/in/rktaparia",
+                "1",
+                "1"
+            ],
+            [
+                "",
+                "General Catalyst",
+                "David Fialkow",
+                "https://www.linkedin.com/in/david-fialkow-20085852",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Golden Ventures",
+                "Matt Golden",
+                "https://www.linkedin.com/in/magolden/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Google for Startups",
+                "Yuval Passov",
+                "https://il.linkedin.com/in/yuvalpassov",
+                "1",
+                null
+            ],
+            [
+                "",
+                "GSV Ventures",
+                "Deborah Quazzo",
+                "https://www.linkedin.com/in/deborah-quazzo-1343554",
+                "1",
+                null
+            ],
+            [
+                "",
+                "GTMfund",
+                "Max Altschuler",
+                "https://www.linkedin.com/in/maxaltschuler",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Ground Up Ventures",
+                "David Stark",
+                "https://www.linkedin.com/in/david-stark-36bb1938/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Growth Warrior Capital",
+                "Promise Phelon",
+                "https://www.linkedin.com/in/promise_phelon/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "H20 Capital",
+                "Mauricio Porras",
+                "https://www.linkedin.com/in/mauricio-porras-837995105",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Hanabi Capital",
+                "Mike Volpi",
+                "https://www.linkedin.com/in/mavolpi",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Harlem Capital",
+                "Henri Pierre-Jacques",
+                "https://www.linkedin.com/in/hpierrejacques",
+                "1",
+                null
+            ],
+            [
+                "",
+                "HFO",
+                "Gregory Frick",
+                "https://www.linkedin.com/in/gregfrick",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Hustle Fund",
+                "Elizabeth Yin",
+                "https://www.linkedin.com/in/elizabethyin",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Id4 ventures",
+                "Herve Cuviliez",
+                "https://ae.linkedin.com/in/hervecuviliez",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Ingeborg Investments",
+                "Anna Mason",
+                "https://www.linkedin.com/in/annakohanskimason",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Insight Partners",
+                "Jeff Horing",
+                "https://www.linkedin.com/in/jeffhoring2009/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Irregular Expressions",
+                "Jean Sini",
+                "https://www.linkedin.com/in/jeansini",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Kadmos Capital",
+                "Remy Kesrouani",
+                "https://uk.linkedin.com/in/rkesrouani",
+                "1",
+                null
+            ],
+            [
+                "",
+                "K5 Global",
+                "Bryan Baum",
+                "https://www.linkedin.com/in/bryan-baum-9592596",
+                "1",
+                null
+            ],
+            [
+                "",
+                "K9 Ventures",
+                "Dr. Manu Kumar",
+                "https://www.linkedin.com/in/sneaker",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Karman Ventures",
+                "William Barnes",
+                "https://www.linkedin.com/in/williampbarnes",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Keiretsu Capital",
+                "Nathan McDonald",
+                "https://www.linkedin.com/in/nathanmcdonald1",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Laude Ventures",
+                "Pete Sonsini",
+                "https://www.linkedin.com/in/petesonsini",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Lightspeed Venture Partners",
+                "Ravi Mhatre",
+                "https://www.linkedin.com/in/ravimhatre",
+                "1",
+                null
+            ],
+            [
+                "",
+                "M13",
+                "Karl Alomar",
+                "https://www.linkedin.com/in/karl-alomar-0516a219",
+                "1",
+                null
+            ],
+            [
+                "",
+                "MaC Venture Capital",
+                "Marlon Nichols",
+                "https://www.linkedin.com/in/marloncnichols",
+                "1",
+                null
+            ],
+            [
+                "",
+                "MCJ",
+                "Cody Simms",
+                "https://www.linkedin.com/in/codysimms",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Neo",
+                "Ali Partovi",
+                "https://www.linkedin.com/in/apartovi",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Neotribe Ventures",
+                "Swaroop 'Kittu' Kolluri",
+                "https://www.linkedin.com/in/kittukolluri",
+                "1",
+                null
+            ],
+            [
+                "",
+                "New Enterprise Associates",
+                "Scott Sandell",
+                "https://www.linkedin.com/in/scottsandell",
+                "1",
+                null
+            ],
+            [
+                "",
+                "NextView Ventures",
+                "David Beisel",
+                "https://www.linkedin.com/in/davidbeisel",
+                "1",
+                null
+            ],
+            [
+                "",
+                "NFX",
+                "James Currier",
+                "https://www.linkedin.com/in/jamescurrier",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Okta Ventures",
+                "Austin Arensberg",
+                "https://www.linkedin.com/in/austinarensberg/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Paper Ventures",
+                "Oliver Blakey",
+                "https://www.linkedin.com/in/oliverblakey",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Pioneer Fund",
+                "Tim Suzman",
+                "https://www.linkedin.com/in/timsuzman",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Plug and Play",
+                "Amir Amidi",
+                "https://www.linkedin.com/in/amir-amidi",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Precursor Ventures",
+                "Charles Hudson",
+                "https://www.linkedin.com/in/chudson",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Primitive Ventures",
+                "Dovey Wan",
+                "https://sg.linkedin.com/in/doveywan",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Protagonist",
+                "George Bousis",
+                "https://www.linkedin.com/in/gbousis",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Rain Capital",
+                "Chenxi Wang",
+                "https://www.linkedin.com/in/chenxiwang88",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Race Capital",
+                "Alfred Chuang",
+                "https://www.linkedin.com/in/alchuang",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Rebel Fund",
+                "Jared Heyman",
+                "https://www.linkedin.com/in/jaredheyman",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Ride Ventures",
+                "Greg Arrese",
+                "https://www.linkedin.com/in/greg-arrese",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Sierra Ventures",
+                "Mark Fernandes",
+                "https://www.linkedin.com/in/markjfernandes",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Silent Ventures",
+                "Jackson Moses",
+                "https://www.linkedin.com/in/jacksonmoses",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Singularity Capital",
+                "Sudeep Mishra",
+                "https://www.linkedin.com/in/sudeepmishra?trk=org-employees",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Susa Ventures",
+                "Chad Byers",
+                "https://www.linkedin.com/in/chadabyers",
+                "1",
+                null
+            ],
+            [
+                "",
+                "StepChange",
+                "Anay Shah",
+                "https://www.linkedin.com/in/anayshah/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Streamlined Ventures",
+                "Ullas Naik",
+                "https://www.linkedin.com/in/ullasnaik",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Storm Ventures",
+                "Ryan Floyd",
+                "https://www.linkedin.com/in/ryanfloyd1",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Stellar Ventures",
+                "Celeste Ford",
+                "https://www.linkedin.com/in/ceford",
+                "1",
+                null
+            ],
+            [
+                "",
+                "TQ Ventures",
+                "Andrew Marks",
+                "https://www.linkedin.com/in/andrew-marks-92429015",
+                "1",
+                null
+            ],
+            [
+                "",
+                "TTV Capital",
+                "Gardiner Garrard",
+                "https://www.linkedin.com/in/gardinergarrard",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Titan Capital",
+                "Kunal Bahl",
+                "https://www.linkedin.com/in/kunalbahl/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Transpose Platform Management",
+                "Trang Nguyen",
+                "https://www.linkedin.com/in/trangnguyen2010?trk=org-employees",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Tokyo Black",
+                "Keenan Rice",
+                "https://www.linkedin.com/in/keenanrice",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Upfront Ventures",
+                "Mark Suster",
+                "https://www.linkedin.com/in/marksuster",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Unusual Ventures",
+                "John Vrionis",
+                "https://www.linkedin.com/in/johnvrionis/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Variant",
+                "Jesse Walden",
+                "https://www.linkedin.com/in/jessewalden",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Valhalla Ventures",
+                "Matthew King",
+                "https://www.linkedin.com/in/matthewtking/",
+                "1",
+                null
+            ],
+            [
+                "",
+                "VamosVentures",
+                "Marcos Gonzalez",
+                "https://www.linkedin.com/in/marcos-gonzalez-b567042",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Village Global",
+                "Anne Dwane",
+                "https://www.linkedin.com/in/dwane",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Y Combinator",
+                "Harj Taggar",
+                "https://www.linkedin.com/in/garrytan",
+                "1",
+                null
+            ],
+            [
+                "",
+                "Zenda",
+                "Esteban Reyes",
+                "https://www.linkedin.com/in/reyesesteban",
+                "1",
+                null
+            ]
+        ]
+    },
+    "Series A": {
+        "columns": [
+            "是否通过linked申请?",
+            "Company Name",
+            "Founder Name",
+            "CEO",
+            "CEO Email",
+            "CEO Linkedin",
+            "Linkedin Request?",
+            "Connected?",
+            "COO/CFO ",
+            "COO/CFO Linkedin",
+            "Company Website",
+            "Industry",
+            "Funding Round",
+            "Funding Amount (USD)",
+            "Last Funding Date",
+            "Lead Investor"
+        ],
+        "data": [
+            [
+                "",
+                "Casca",
+                "Lukas Haffer",
+                "Lukas Haffer",
+                "lukas@cascading.ai\nlukashaffer@cascading.ai",
+                "https://www.linkedin.com/in/lukashaffer/",
+                "Sent",
+                null,
+                "Adlon Adams (COO)",
+                "https://www.linkedin.com/in/adlonadams",
+                "https://www.cascading.ai",
+                "AI + Banking, FinTech, Software",
+                "Sries A",
+                "32.9M",
+                "2025-08-19",
+                "Y Combinator, Canapi Ventures, Clocktower Technology Ventures, Huntington National Bank, Peterson Ventures"
+            ],
+            [
+                "",
+                "Landbase",
+                "Daniel Saks, Emily Zhang, Hua Gao",
+                "Daniel Saks",
+                "daniel.saks@appdirect.com\ndaniel@appdirect.com\ndanielhsaks@gmail.com\ndaniel.saks@mail.mcgill.ca",
+                "https://www.linkedin.com/in/danielsaks/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.landbase.com",
+                "AI + Marketing, Marketing Automation, Sales, Sales Automation, Software",
+                "Sries A",
+                "42.5M",
+                "2025-06-12",
+                "General Catalyst, 8VC, Inovia Capital, A*, Sound Ventures"
+            ],
+            [
+                "",
+                "PlayerZero",
+                "Animesh Koratana",
+                "Animesh Koratana",
+                "koratana@testgram.ai\nanimesh@playerzero.app\nanimesh.koratana@gmail.com",
+                "https://www.linkedin.com/in/animesh-koratana/",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.playerzero.ai",
+                "AI + Developer Platform, Developer Tools",
+                "Sries A",
+                "20.0M",
+                "2025-07-30",
+                "Foundation Capital, Green Bay Ventures, Guillermo Rauch, Dylan Field, Drew Houston"
+            ],
+            [
+                "",
+                "Prophet Security",
+                "Kamal Shah, Vibhav Sreekanti",
+                "Kamal Shah Kamal",
+                "kamal@prophet.security",
+                "https://www.linkedin.com/in/kdshah/",
+                "need email",
+                null,
+                null,
+                null,
+                "https://www.prophet.security",
+                "AI + Computer, Network Security, Security",
+                "Sries A",
+                "41.0M",
+                "2025-07-29",
+                "Accel, Bain Capital Ventures"
+            ],
+            [
+                "",
+                "Firecrawl",
+                "Caleb Peffer, Eric Ciarla, Nicolas Camara",
+                "Eric Ciarla - Co-founder",
+                "ericpciarla@gmail.com",
+                "https://www.linkedin.com/in/eric-ciarla/",
+                "sent",
+                "yes",
+                "Eric Ciarla (COO)",
+                "https://www.linkedin.com/in/eric-ciarla",
+                "https://www.firecrawl.dev",
+                "AI + Developer APIs, SaaS, Web Development",
+                "Sries A",
+                "14.5M",
+                "2025-08-19",
+                "Nexus Venture Partners, Y Combinator, Tobias Lütke, Zapier, Abhinav Asthana"
+            ],
+            [
+                "",
+                "Alix",
+                "Alexandra Mysoor, Hugh Tamassia",
+                "Alexandra Mysoor",
+                "alexandra.mysoor@securitynational.com",
+                "https://www.linkedin.com/in/alexandramysoor/",
+                "sent",
+                null,
+                "Hugh Tamassia (Co-founder + CTO/COO)",
+                "https://www.linkedin.com/in/hugh-tamassia",
+                "http://www.meetalix.com",
+                "AI + Financial Services, FinTech, Legal Tech",
+                "Sries A",
+                "29.4M",
+                "2025-07-21",
+                "Alumni Ventures, Acrew Capital, Charles Schwab, Scribble Ventures, Initialized Capital"
+            ],
+            [
+                "",
+                "Composio",
+                "Soham Ganatra",
+                "Soham Ganatra - Founder",
+                "soham@composio.dev\n\nsoham.g@composio.dev",
+                "https://www.linkedin.com/in/soham-ganatra/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://composio.dev",
+                "AI + Developer Tools, Enterprise Software, PaaS, Productivity Tools, SaaS",
+                "Sries A",
+                "31.0M",
+                "2025-04-09",
+                "Elevation Capital, Lightspeed Venture Partners, SV Angel, Together Fund, Operator Partners"
+            ],
+            [
+                "",
+                "Cline",
+                "Saoud Rizwan",
+                "Saoud Rizwan",
+                "saoud@cline.bot\nsaoudrizwan@cline.bot\n",
+                "https://www.linkedin.com/in/saoud-rizwan/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://cline.bot",
+                "AI + Generative AI, Open Source, Software, Software Engineering",
+                "Sries A",
+                "32.0M",
+                "2025-07-31",
+                "Emergence Capital, 1984 Ventures, Pace Capital, Essence VC, Jared Friedman"
+            ],
+            [
+                "",
+                "Citizen Health",
+                "Farid Vij, Nasha Fitter",
+                "Farid Vij",
+                "faridvij@gmail.com\nfarid.vij@gmail.com\n",
+                "https://www.linkedin.com/in/faridvij/",
+                "sent",
+                null,
+                "Hila Moyal (COO)",
+                "https://www.linkedin.com/in/hila-moyal",
+                "https://www.citizenhealth.com",
+                "AI + Big Data, Health Care, Life Science, Personal Health",
+                "Sries A",
+                "44.5M",
+                "2025-08-14",
+                "Headline, 8VC, Transformation Capital, Wavemaker 360, Chan Zuckerberg Initiative"
+            ],
+            [
+                "",
+                "WizCommerce",
+                "Divyaanshu Makkar, Vikas Garg",
+                "Divyaanshu Makkar",
+                "divyaanshu@sourcewiz.co\ndivyaanshu@sourcewiz.com\ndivyanshumakkar@gmail.com\n",
+                "https://www.linkedin.com/in/divyaanshumakkar/",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.wizcommerce.com",
+                "AI + Apps, B2B, CRM, Digital Media, Online Portals",
+                "Sries A",
+                "8.0M",
+                "2025-08-25",
+                "Peak XV Partners, Z47, Alpha Wave Global, Blume Ventures, Neon Fund"
+            ],
+            [
+                "",
+                "Tavily",
+                "Assaf Elovic, Rotem Weiss, Yuval Rozio",
+                "Rotem Weiss",
+                "rotem@tavily.com",
+                "https://www.linkedin.com/in/rotem-weiss/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://tavily.com",
+                "AI + Generative AI, Information Technology, Search Engine",
+                "Sries A",
+                "25.0M",
+                "2025-08-06",
+                "Insight Partners, Alpha Wave Global"
+            ],
+            [
+                "",
+                "Venteur",
+                "Stacy Edgar, Timothy Edgar",
+                "Stacy Edgar",
+                "stacy@venteur.co\nstacy.edgar@venteur.co",
+                "https://www.linkedin.com/in/stacyedgar/",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.venteur.com",
+                "AI + Employee Benefits, Finance, Financial Services, Health Care, Insurance, InsurTech, Marketplace",
+                "Sries A",
+                "27.72M",
+                "2025-04-01",
+                "Plug and Play, Techstars, GSR Ventures, American Family Ventures, Plug and Play"
+            ],
+            [
+                "",
+                "Moises",
+                "Eddie Hsu, Geraldo Ramos, Jardson Almeida",
+                "Geraldo Ramos",
+                "geraldo@moises.ai",
+                "https://www.linkedin.com/in/geraldoramos/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://moises.ai",
+                "AI + Machine Learning, Music",
+                "Sries A",
+                "40.43M",
+                "2025-05-12",
+                "Norwest Venture Partners, Alumni Ventures, Goodwater Capital, Index Ventures, Kickstart"
+            ],
+            [
+                "",
+                "Yourway Learning",
+                "Jaime Pales, Jason Green",
+                "Jerry Weissberg",
+                "jerryweissberg@yourwaylearning.com",
+                "https://www.linkedin.com/in/jerry-weissberg-4245ba1",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.yourwaylearning.com",
+                "AI + E-Learning, EdTech, Education",
+                "Sries A",
+                "15.0M",
+                "2025-08-19",
+                "Greybull Stewardship"
+            ],
+            [
+                "",
+                "Edera",
+                "Alex Zenla, Ariadne Conill, Emily Long",
+                "Emily Long",
+                "emily@edera.dev",
+                "https://www.linkedin.com/in/emily-long-7a194b4",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://edera.dev",
+                "AI + Cyber Security, Developer APIs, Enterprise Software, IT Infrastructure",
+                "Sries A",
+                "20.0M",
+                "2025-02-25",
+                "FPV Ventures, 645 Ventures, MANTIS Venture Capital, Eniac Ventures, Precursor Ventures"
+            ],
+            [
+                "",
+                "Jump",
+                "Adam Kirk, Parker Ence, Tim Chaves",
+                "Parker Ence",
+                "parker@dw-corp.com\nrence@hotmail.com\nbruxitdevice@gmail.com",
+                "https://www.linkedin.com/in/parkerence",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://jumpapp.com",
+                "AI + Financial Services, FinTech, Generative AI, SaaS, Wealth Management",
+                "Sries A",
+                "29.17M",
+                "2025-02-03",
+                "Battery Ventures, Sorenson Capital, Citi Ventures, Pelion Venture Partners, Element Ventures"
+            ],
+            [
+                "",
+                "E2B",
+                "Tomas Valenta, Vasek Mlejnsky",
+                "Vasek Mlejnsky",
+                "vasek@e2b.dev",
+                "https://www.linkedin.com/in/mlejva",
+                "sent",
+                null,
+                null,
+                null,
+                "https://e2b.dev",
+                "AI + Cloud Management, Developer APIs, Software",
+                "Sries A",
+                "35.02M",
+                "2025-07-28",
+                "Insight Partners, KAYA, Decibel Partners, Edward Lando, Pareto Holdings"
+            ],
+            [
+                "",
+                "Barti",
+                "Colton Calandrella, Kelly Cai",
+                "Colton Calandrella",
+                "info@barti.com",
+                "https://www.linkedin.com/in/coltoncalandrella",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.barti.com",
+                "AI + Electronic Health Record (EHR), Health Care, SaaS",
+                "Sries A",
+                "16.5M",
+                "2025-08-25",
+                "Five Elms Capital, Health Engine"
+            ],
+            [
+                "",
+                "SquareX",
+                "Vivek Ramachandran",
+                "Vivek Ramachandran",
+                "vivek@binarysecuritysolutions.com\nvivek@vrncomics.com\nviveksecuritywizard@gmail.com\nvivek.securitywizard@gmail.com\n",
+                "https://www.linkedin.com/in/vivekramachandran",
+                "inmail directly",
+                null,
+                null,
+                null,
+                "https://www.sqrx.com",
+                "AI + Cyber Security, Information Technology, SaaS",
+                "Sries A",
+                "26.0M",
+                "2025-04-24",
+                "Peak XV Partners, SYN Ventures, Sequoia South East Asia"
+            ],
+            [
+                "",
+                "Vultron",
+                "Joshua Gluck, Mac Liu",
+                "Mac Liu",
+                "mac@vultron.ai\n\nmacliu@wealthfront.com\n\nmacliu388@gmail.com\n\nlium20@outlook.com",
+                "https://www.linkedin.com/in/macliu1/",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.vultron.ai",
+                "AI + Software",
+                "Sries A",
+                "26.85M",
+                "2025-07-14",
+                "South Park Commons, Craft Ventures, Long Journey Ventures, Greycroft, Tofino Capital"
+            ],
+            [
+                "",
+                "Irrigreen",
+                "Gary Klinefelter, Shane Dyer",
+                "Shane Dyer",
+                "shane.dyer@irrigreen.com",
+                "https://www.linkedin.com/in/shane-dyer-75a84",
+                "sent",
+                null,
+                null,
+                null,
+                "https://irrigreen.com",
+                "AI + Home and Garden, Landscaping, Manufacturing",
+                "Sries A",
+                "43.13M",
+                "2025-04-22",
+                "Ulu Ventures, Burnt Island Ventures, Sum Ventures, Anorak Ventures, Tamiami Angel Funds"
+            ],
+            [
+                "",
+                "Sola",
+                "Jessica Wu, Neil Deshmukh",
+                "Jessica Wu",
+                "jessica@sola.ai\njessica5a@yahoo.com\n",
+                "https://www.linkedin.com/in/jessica-wu-9824431ab",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.sola.ai/",
+                "AI + Business Process Automation (BPA), Data Center Automation, Machine Learning, Robotics",
+                "Sries A",
+                "21.0M",
+                "2025-08-14",
+                "Andreessen Horowitz, Y Combinator, Conviction"
+            ],
+            [
+                "",
+                "Evertune",
+                "Brian Stempeck, Edward Chater, Poul Costinsky",
+                "Brian Stempeck",
+                "brian@evertune.ai",
+                "https://www.linkedin.com/in/brian-stempeck-1705b35",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.evertune.ai/",
+                "AI + Analytics, Business Intelligence, Enterprise Software, SaaS",
+                "Sries A",
+                "19.0M",
+                "2025-08-12",
+                "Sonia Phene, Felicis, Eniac Ventures, NextView Ventures, Sarfraz Maredia"
+            ],
+            [
+                "",
+                "Zip Security",
+                "Gabbi Merz, Joshua Zweig",
+                "Joshua Zweig",
+                "joshua.zweig@area1security.com",
+                "https://www.linkedin.com/in/zweigjoshua",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.zipsec.com",
+                "AI + Cyber Security, Network Security, Security",
+                "Sries A",
+                "21.2M",
+                "2025-07-14",
+                "General Catalyst, BoxGroup, Ballistic Ventures, Human Capital, MANTIS Venture Capital"
+            ],
+            [
+                "",
+                "Biobot Analytics",
+                "Mariana Matus, Newsha Ghaeli",
+                "Mariana Matus",
+                "mariana@biobot.io",
+                "https://www.linkedin.com/in/marianamatus",
+                "sent",
+                null,
+                null,
+                null,
+                "http://www.biobot.io",
+                "AI + Analytics, Big Data, Biotechnology, Health Care, Information Services, Water",
+                "Sries A",
+                "41.40M",
+                "2025-06-06",
+                "Valor Equity Partners, Y Combinator, Pioneer Fund, Liquid 2 Ventures, DCVC"
+            ],
+            [
+                "",
+                "Reco",
+                "Gal Nakash, Ofer Klein, Tal Shapira",
+                "Ofer Klein",
+                "\nofer@recolabs.ai\n\nofer@reco.ai\n\nkleinofe@gmail.com",
+                "https://www.linkedin.com/in/oferklein",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.reco.ai",
+                "AI + Cyber Security, Generative AI, SaaS",
+                "Sries A",
+                "55.0M",
+                "2025-04-22",
+                "Insight Partners, Plug and Play, Zeev Ventures, Angular Ventures, boldstart ventures"
+            ],
+            [
+                "",
+                "Heron Data",
+                "Dominic Kwok, Jamie Parker, Johannes Jaeckle",
+                "Johannes Jaeckle",
+                "johannes@herondata.io",
+                "https://www.linkedin.com/in/johannes-jaeckle-614b567b/",
+                "sent",
+                null,
+                null,
+                null,
+                "http://www.herondata.io",
+                "AI + Document Management, Financial Exchanges, FinTech, SaaS",
+                "Sries A",
+                "17.8M",
+                "2025-07-15",
+                "Insight Partners, BoxGroup, Y Combinator, Flex Capital, Matt Robinson"
+            ],
+            [
+                "",
+                "Develop Health",
+                "Ben Easton, Mel van Londen",
+                "Mel van Londen",
+                "mvanlonden@develophealth.ai",
+                "https://www.linkedin.com/in/mvanlonden",
+                "sent",
+                null,
+                null,
+                null,
+                "https://develophealth.io",
+                "AI + Health Care, Pharmaceutical, Software",
+                "Sries A",
+                "16.15M",
+                "2025-08-20",
+                "South Park Commons, Wing Venture Capital, Afore Capital, J Ventures, Darran Bahl"
+            ],
+            [
+                "",
+                "Eyebot",
+                "Jack Moldave, Matthias Hofmann",
+                "Matthias Hofmann",
+                "mhofmann@eyebot.co",
+                "https://www.linkedin.com/in/mchofmann",
+                "need email",
+                null,
+                null,
+                null,
+                "http://www.eyebot.co",
+                "AI + Eyewear, Health Diagnostics, Robotics",
+                "Sries A",
+                "29.93M",
+                "2025-08-26",
+                "National Science Foundation, General Catalyst, Village Global, AlleyCorp, Baukunst"
+            ],
+            [
+                "",
+                "Rune Technologies",
+                "David Tuttle",
+                "David Tuttle",
+                "david.tuttle@runetech.co",
+                "https://www.linkedin.com/in/davidtuttle1",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.runetech.co/",
+                "AI + Logistics, Manufacturing, Military",
+                "Sries A",
+                "30.2M",
+                "2025-07-21",
+                "Andreessen Horowitz, XYZ Venture Capital, Human Capital, Washington Harbour Partners, Point72 Ventures"
+            ],
+            [
+                "",
+                "Rad Security",
+                "Brooke Motta, Jimmy Mesta",
+                "Brooke Motta",
+                "brooke.motta@radsecurity.ai",
+                "https://www.linkedin.com/in/brookemotta",
+                "sent",
+                null,
+                "Nick Telford (CFO)",
+                "https://www.linkedin.com/in/nick-telford-11b4348",
+                "https://radsecurity.ai",
+                "AI + Event Management, Information Technology, IT Infrastructure, SaaS",
+                "Sries A",
+                "30.65M",
+                "2025-02-24",
+                "CrowdStrike, Forgepoint Capital, .406 Ventures, Akamai Technologies, Vertex Ventures US"
+            ],
+            [
+                "",
+                "H2Ok Innovations",
+                "Annie Lu, David Lu",
+                "Annie Lu",
+                "annie@h2okinnovations.com",
+                "https://www.linkedin.com/in/annie-l-7ba794117",
+                "sent",
+                null,
+                "Karin Bloom (Head of Operations)",
+                "https://www.linkedin.com/in/karinbloom",
+                "http://www.h2okinnovations.com",
+                "AI + Consumer Goods, Industrial Automation, Manufacturing, Sensor",
+                "Sries A",
+                "19.96M",
+                "2025-07-16",
+                "Techstars, Greycroft, Construct Capital, Flybridge, MassChallenge"
+            ],
+            [
+                "",
+                "SchoolAI",
+                "Caleb Hicks",
+                "Caleb Hicks",
+                "caleb@schoolai.com",
+                "https://www.linkedin.com/in/calebhicks",
+                "sent",
+                null,
+                null,
+                null,
+                "https://schoolai.com",
+                "AI + Education, Information Services",
+                "Sries A",
+                "25.0M",
+                "2025-04-02",
+                "Insight Partners, The General Partnership, NextView Ventures, Peterson Ventures, Graph Ventures"
+            ],
+            [
+                "",
+                "Anchor",
+                "Leeor Aharon, Omry Man, Rom Lakritz",
+                "Rom Lakritz",
+                "romlakritz@sayanchor.com",
+                "https://il.linkedin.com/in/romlakritz",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.sayanchor.com/",
+                "AI + B2B, Billing, Collection Agency, Finance, Financial Services, Payments, Software",
+                "Sries A",
+                "35.0M",
+                "2025-01-29",
+                "Entrée Capital, Zeev Ventures, Tal Ventures, Mosaic General Partnership, Tien Tzuo"
+            ],
+            [
+                "",
+                "InstaLILY AI",
+                "Amit Shah, Sumantro Das",
+                "Amit Shah",
+                "amit@instalily.ai",
+                "https://www.linkedin.com/in/ashahnet",
+                "sent",
+                null,
+                "Sumantro Das (COO)",
+                "https://www.linkedin.com/in/sumantrodas",
+                "https://instalily.ai",
+                "AI + Enterprise Software, Information Technology, Machine Learning, Software",
+                "Sries A",
+                "25.0M",
+                "2025-08-27",
+                "Marvin Ventures, Insight Partners, Perceptive Ventures"
+            ],
+            [
+                "",
+                "Gaia",
+                "Matt Wright",
+                "Matt Wright",
+                "\nmatt.socials@evmcapital.com\n\nmatt.wright@consensys.net\n\nmatt.d.wright88@gmail.com",
+                "https://www.linkedin.com/in/matthewdavidwright",
+                "sent",
+                null,
+                "Alexia Arts (COO)",
+                "https://www.linkedin.com/in/alexia-arts-23303a3a",
+                "https://www.gaianet.ai",
+                "AI + Blockchain, Information Technology, Internet",
+                "Sries A",
+                "20.0M",
+                "2025-07-22",
+                "BitGo, MoonPay, Amber Group, Paper Ventures, NGC Ventures"
+            ],
+            [
+                "",
+                "Loti",
+                "Hirak Chhatbar, Luke Arrigoni, Rebekah Arrigoni",
+                "Luke Arrigoni",
+                "luke.arrigoni@lotiai.com",
+                "https://www.linkedin.com/in/lukearrigoni",
+                "sent",
+                "yes",
+                "Jae Kim (COO)",
+                "https://www.linkedin.com/in/jae-kim-loti",
+                "https://www.lotiai.com",
+                "AI + Facial Recognition, Machine Learning, Public Safety",
+                "Sries A",
+                "22.85M",
+                "2025-04-15",
+                "Khosla Ventures, Bling Capital, K5 Global, FUSE, Ensemble VC"
+            ],
+            [
+                "",
+                "Scrunch AI",
+                "Chris Andrew, Robert MacCloy",
+                "Chris Andrew",
+                "\nchristopher.andrew@adecco.com\n\ncandrew@hearsaysocial.com\n\nchris.andrew@yahoo.com\n\nandrewcw1@gmail.com",
+                "https://www.linkedin.com/in/chriswandrew",
+                "sent",
+                null,
+                null,
+                null,
+                "https://scrunchai.com",
+                "AI + Information Technology, Internet",
+                "Sries A",
+                "19.0M",
+                "2025-07-22",
+                "Mayfield Fund, Homebrew, Decibel Partners, Jetstream, Bryant Chou"
+            ],
+            [
+                "",
+                "Yoodli",
+                "Esha Joshi, Varun Puri",
+                "Varun Puri",
+                "varun@yoodli.ai",
+                "https://www.linkedin.com/in/varun-puri001",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.yoodli.ai",
+                "AI + Information Technology, Real Time, Software, Speech Recognition",
+                "Sries A",
+                "20.7M",
+                "2025-05-21",
+                "Madrona, Ascend, Allen Institute for Artificial Intelligence, AI2 Incubator, J4.Ventures"
+            ],
+            [
+                "",
+                "Arcade",
+                "Mariam Naficy",
+                "Mariam Naficy",
+                "mariam@heretic.ventures\n\nmariam@minted.com\n\nsnambiar92@gmail.com\n\nmnaficy@alumni.stanfordgsb.org",
+                "https://www.linkedin.com/in/mariam-naficy",
+                "need email",
+                null,
+                "Harry Coleman (CFO)",
+                "https://www.linkedin.com/in/harry-coleman-548209118",
+                "https://www.arcade.ai",
+                "AI + E-Commerce, Jewelry",
+                "Sries A",
+                "37.0M",
+                "2025-03-24",
+                "Torch Capital, Flybridge, Reid Hoffman, April Underwood, Heretic Ventures"
+            ],
+            [
+                "",
+                "Rwazi",
+                "Eric Sewankambo, Joseph Rutakangwa",
+                "Joseph Rutakangwa",
+                "joseph@rwazi.com",
+                "https://www.linkedin.com/in/joseph-rutakangwa",
+                "sent",
+                null,
+                "Eric Sewankambo (COO)",
+                "https://www.linkedin.com/in/eric-sewankambo",
+                "https://rwazi.com",
+                "AI + Analytics, Big Data, Business Intelligence, Generative AI, Information Technology",
+                "Sries A",
+                "20.0M",
+                "2025-07-15",
+                "Alumni Ventures, Techstars, Bonfire Ventures, Newfund, Santa Barbara Venture Partners"
+            ],
+            [
+                "",
+                "Knit",
+                "Aneesh Dhawan",
+                "Aneesh Dhawan",
+                "aneesh.dhawan@goknit.com",
+                "https://www.linkedin.com/in/aneesh-dhawan-140212141",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://goknit.com/",
+                "AI + Advertising, Consumer Research, Market Research, Software",
+                "Sries A",
+                "30.65M",
+                "2025-07-31",
+                "Techstars, Alumni Ventures, Silicon Road Ventures, GFT Ventures, Osage Venture Partners"
+            ],
+            [
+                "",
+                "OffDeal",
+                "Alston Lin, Ori Eldarov",
+                "Ori Eldarov",
+                "\norhan.eldarov@gmail.com\n\norhaneldarov@gmail.com\n",
+                "https://www.linkedin.com/in/eldarov",
+                "sent",
+                null,
+                null,
+                null,
+                "https://offdeal.io",
+                "AI + Information Technology, Software",
+                "Sries A",
+                "16.83M",
+                "2025-07-29",
+                "Radical Ventures, Y Combinator, Rebel Fund, Andy Dunn, Centre Street Partners"
+            ],
+            [
+                "",
+                "Artisan AI",
+                "Jaspar Carmichael-Jack, Sam Stallings",
+                "Jaspar Carmichael-Jack",
+                "jaspar@artisan.co",
+                "https://www.linkedin.com/in/jaspar-carmichael-jack",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.artisan.co",
+                "AI + Information Technology, Internet, SaaS, Software",
+                "Sries A",
+                "46.1M",
+                "2025-04-09",
+                "Alumni Ventures, Bond, Y Combinator, Glade Brook Capital Partners, 10x Founders"
+            ]
+        ]
+    },
+    "Series Seed": {
+        "columns": [
+            "是否通过linked申请?",
+            "Company Name",
+            "Founder Name",
+            "CEO",
+            "CEO Email",
+            "CEO Linkedin",
+            "Linkedin Request?",
+            "Connected?",
+            "COO/CFO",
+            "COO/CFO Linkedin",
+            "Company Website",
+            "Industry",
+            "Funding Round",
+            "Funding Amount (USD)",
+            "Last Funding Date",
+            "Lead Investor"
+        ],
+        "data": [
+            [
+                "",
+                "SRE.ai",
+                "Edward Aryee, Rajsekhar Kadiyala",
+                "Rajsekhar Kadiyala",
+                "raj@sre.ai",
+                "https://www.linkedin.com/in/rajsekhark/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://sre.ai",
+                "Artificial Intelligence (AI), Developer Tools, Software",
+                "Seed",
+                "7.70M",
+                "2025-08-20",
+                "Allen Wu, Juan Abundes, 468 Capital, Y Combinator, Salesforce Ventures"
+            ],
+            [
+                "",
+                "Keye",
+                "Conor Brown, Lalit Lal, Paolo Fornasini, Rohan Parikh",
+                "Rohan Parikh, CFA",
+                "rohan@keye.co",
+                "https://www.linkedin.com/in/parikhrohan/",
+                "sent",
+                null,
+                "Conor Brown – Chief Operating Officer",
+                "https://www.linkedin.com/in/conor-brown-9a02849b/",
+                "https://www.keye.co",
+                "Artificial Intelligence (AI), Enterprise Applications, Finance, Information Technology",
+                "Seed",
+                "5.25M",
+                "2025-07-29",
+                "General Catalyst, Plug and Play, Sorenson Capital, Y Combinator, Dunamu"
+            ],
+            [
+                "",
+                "Paradigm",
+                "Anna Monaco",
+                "Anna Monaco",
+                "anna@paradigmai.com",
+                "https://www.linkedin.com/in/anna-monaco",
+                "sent",
+                null,
+                "Aimy Ngo – Chief Operating Officer",
+                "https://www.linkedin.com/in/aimyngo",
+                "https://www.paradigmai.com",
+                "Artificial Intelligence (AI), Productivity Tools, Software",
+                "Seed",
+                "7.00M",
+                "2025-08-18",
+                "General Catalyst, Y Combinator, Karman Ventures, Failup Ventures, Arash Ferdowsi"
+            ],
+            [
+                "",
+                "Julius AI",
+                "Rahul Sonwalkar",
+                "Rahul Sonwalkar",
+                "rahul@julius.ai",
+                "https://www.linkedin.com/in/rahulsonwalkar23",
+                "sent",
+                null,
+                null,
+                null,
+                "https://julius.ai",
+                "Analytics, Artificial Intelligence (AI), Data Visualization, Information Technology",
+                "Seed",
+                "10.50M",
+                "2025-07-28",
+                "Bessemer Venture Partners, Y Combinator, 8VC, Karman Ventures, Guillermo Rauch"
+            ],
+            [
+                "",
+                "Aeon",
+                "Joseph Cieslik, Naweed Tahmas",
+                "Naweed Tahmas",
+                "nt@aeonindustries.co",
+                "https://www.linkedin.com/in/ntahmas",
+                "sent",
+                null,
+                "Caroline Horton – Chief Financial Officer",
+                null,
+                "https://aeonindustries.co",
+                "Aerospace, Artificial Intelligence (AI), Computer Vision, Intelligent Systems, Manufacturing, Military, National Security",
+                "Seed",
+                "16.60M",
+                "2025-03-14",
+                "Quiet Capital, Vanderbilt University, MaC Venture Capital, Silent Ventures, Valhalla Ventures"
+            ],
+            [
+                "",
+                "Mindtrip",
+                "Andy Moss, Elsa Kawai, Garrick Toubassi, Jordan Castillo, Katherine Wang, Manish Dubey, Mika Kozma, Rob Davis, Trey Matteson, Vincent Lo",
+                "Andy Moss",
+                "andy@mindtrip.ai",
+                "https://www.linkedin.com/in/andy-moss-7434a2/",
+                "sent",
+                null,
+                "Rudi Thun – Chief Operating Officer",
+                "https://www.linkedin.com/in/rudithun/",
+                "https://mindtrip.ai",
+                "Artificial Intelligence (AI), Software, Travel",
+                "Seed",
+                "19.00M",
+                "2024-09-17",
+                "Forerunner, Costanoa Ventures, Amex Ventures"
+            ],
+            [
+                "",
+                "Aurasell",
+                "Jason Eubanks, Srinivas Bandi",
+                "Jason Eubanks",
+                "jason.eubanks@waynefarms.com\njason.eubanks@chainlinklabs.com\njasondeubanks@gmail.com\njason.eubanks@att.net",
+                "https://www.linkedin.com/in/jason-eubanks-a775ba",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.aurasell.ai",
+                "Artificial Intelligence (AI), Customer Service, Sales, Software",
+                "Seed",
+                "30.00M",
+                "2025-08-26",
+                "Menlo Ventures, Unusual Ventures, Next47"
+            ],
+            [
+                "",
+                "Perle AI",
+                "Ahmed Rashad",
+                "Ahmed Rashad",
+                "rouchyz@gmail.com\narashad00@gmail.com",
+                "https://www.linkedin.com/in/ahmed-rashad-perle",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.perle.ai",
+                "Artificial Intelligence (AI), Information Technology, Internet",
+                "Seed",
+                "16.00M",
+                "2025-08-07",
+                "Paper Ventures, Framework Ventures, CoinFund, NGC Ventures, Big Brain Holdings"
+            ],
+            [
+                "",
+                "Trustible",
+                "Andrew Gamino-Cheong, Gerald Iturrioz",
+                "Gerald Kierce-Iturrioz",
+                "gerald@trustible.ai",
+                "https://www.linkedin.com/in/geraldkierce",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.trustible.ai",
+                "Artificial Intelligence (AI), Compliance, Information Technology, Risk Management, Software",
+                "Seed",
+                "12.44M",
+                "2025-06-10",
+                "Alumni Ventures, VamosVentures, Google for Startups, Harlem Capital, Inner Loop Capital"
+            ],
+            [
+                "",
+                "Refold (formerly Cobalt)",
+                "Abhishek Jha, Abhishek Kumar, Jugal Anchalia",
+                "Jugal Anchalia",
+                "jugal@gocobalt.io",
+                "https://www.linkedin.com/in/jugal-anchalia-0a2ab220",
+                "sent",
+                null,
+                null,
+                null,
+                "https://refold.ai",
+                "Artificial Intelligence (AI), Information Technology, SaaS, Software",
+                "Seed",
+                "7.70M",
+                "2025-08-13",
+                "Titan Capital, Eniac Ventures, Better Capital, Karman Ventures, Sahin Boydas"
+            ],
+            [
+                "",
+                "Loopr AI",
+                "Priyansha Bagaria",
+                "Priyansha Bagaria",
+                "priyansha@loopr.ai",
+                "https://www.linkedin.com/in/priyanshabagaria",
+                "sent",
+                "yes",
+                "Noam Gordon – Chief Operations Officer",
+                "https://il.linkedin.com/in/noam-gordon-6a1249256?trk=org-employees",
+                "https://www.loopr.ai",
+                "Artificial Intelligence (AI), Enterprise Software, Information Technology, Software",
+                "Seed",
+                "7.10M",
+                "2025-08-08",
+                "Stellar Ventures, Keiretsu Capital, Growth Warrior Capital, TV, Singularity Capital"
+            ],
+            [
+                "",
+                "Arcade.dev",
+                "Alex Salazar, Sam Partee",
+                "Alex Salazar",
+                "alex@neotribe.com\nalex@getveer.com\nskipshot4@gmail.com\nalexsalazar36@gmail.com",
+                "https://www.linkedin.com/in/alexsalazar",
+                "sent",
+                null,
+                null,
+                null,
+                "https://arcade.dev",
+                "Artificial Intelligence (AI), Cyber Security, Data Integration, Developer APIs, Developer Platform, Developer Tools, Enterprise Software",
+                "Seed",
+                "12.00M",
+                "2025-03-18",
+                "Flybridge, Garuda Ventures, Laude Ventures, Neotribe Ventures, Hanabi Capital"
+            ],
+            [
+                "",
+                "AirMDR",
+                "Anthony Morris, Kumar Saurabh",
+                "Kumar Saurabh",
+                "kumar@airmdr.com",
+                "https://www.linkedin.com/in/kumar1729/",
+                "sent",
+                null,
+                null,
+                null,
+                "https://airmdr.com",
+                "Artificial Intelligence (AI), Cyber Security, Security",
+                "Seed",
+                "15.50M",
+                "2025-07-09",
+                "Foundation Capital, Race Capital, Storm Ventures"
+            ],
+            [
+                "",
+                "Pathway",
+                "Adrian Kosowski, Claire Nouet, Jan Chorowski, Victor Szczerba, Zuzanna Stamirowska",
+                "Zuzanna Stamirowska",
+                "zuzanna@navalgo.com\nzuzanna.stamirowska@sciences-po.org",
+                "https://www.linkedin.com/in/stamirowska",
+                "sent",
+                "yes",
+                "Liz Kraninger – Chief Operating Officer",
+                null,
+                "https://www.pathway.com",
+                "Artificial Intelligence (AI)",
+                "Seed",
+                "14.50M",
+                "2024-10-09",
+                "Inovo.vc, TQ Ventures, Kadmos Capital, Id4 ventures, Market One Capital"
+            ],
+            [
+                "",
+                "Worth AI",
+                "Sal Rehmetullah, Suneera Madhani",
+                "Sal Rehmetullah",
+                "sal@worthai.com",
+                "https://www.linkedin.com/in/sal-rehmetullah-59704741",
+                "sent",
+                null,
+                null,
+                null,
+                "https://worth-ai.com/",
+                "Artificial Intelligence (AI), Business Intelligence, Financial Services, FinTech, Risk Management",
+                "Seed",
+                "39.55M",
+                "2025-03-11",
+                "TTV Capital, Florida Funders, DeepWork Capital, Silicon Valley Bank, Ingeborg Investments"
+            ],
+            [
+                "",
+                "Helium",
+                "Anish Doshi, Shishir Jakati, Zach Witzel",
+                "Zach Witzel",
+                "zach@tryhelium.com",
+                "https://www.linkedin.com/in/zachwitzel/",
+                "sent",
+                null,
+                "Frank Mong – Chief Operating Officer",
+                "https://www.linkedin.com/in/frankmong",
+                "https://tryhelium.com/",
+                "B2B, Developer Tools, Machine Learning",
+                "Seed",
+                "7.40M",
+                "2025-08-14",
+                "Y Combinator, Daybreak ventures, Gradient, Henry Shi"
+            ],
+            [
+                "",
+                "Command Zero",
+                "Alfred Huger, Dov Yoran",
+                "Dov Yoran",
+                "dov@metrositegroup.com\ndyoran@metrositegroup.com\nshelleykohan@gmail.com",
+                "https://www.linkedin.com/in/dovyoran",
+                "sent",
+                null,
+                "Adam Feinzig - Chief Financial Officer",
+                "https://www.linkedin.com/in/adamfeinzig",
+                "https://www.cmdzero.io",
+                "Artificial Intelligence (AI), Cyber Security, Information Technology, Security",
+                "Seed",
+                "45.27M",
+                "2025-07-31",
+                "Andreessen Horowitz, Insight Partners, SE Ventures, Crosspoint Capital Partners, Okta Ventures"
+            ],
+            [
+                "",
+                "Indigo",
+                "Frances Bryant, Jian Wei Gan, Lubega Geoffrey, Paul Kim, Shaival Shah",
+                "Shaival Shah",
+                "sshah@achieveagency.com\nshaival.shah@citadel.com",
+                "https://www.linkedin.com/in/shaivalshah",
+                "sent",
+                null,
+                "Pedro Langa - Global Chief Financial Officer",
+                "https://www.linkedin.com/in/pedrolanga",
+                "https://www.indigo.app",
+                "Artificial Intelligence (AI), Real Estate, Residential",
+                "Seed",
+                "8.00M",
+                "2025-01-23",
+                "NFX, GTMfund, Era Ventures, 1Sharpe Ventures, Jake Seid"
+            ],
+            [
+                "",
+                "Agenda Hero",
+                "Caren Cioffi, Tim Walling",
+                "Caren Cioffi",
+                "caren@agendahero.com",
+                "https://www.linkedin.com/in/carencioffi",
+                "sent",
+                null,
+                null,
+                null,
+                "https://agendahero.com",
+                "Artificial Intelligence (AI), SaaS, Software",
+                "Seed",
+                "5.60M",
+                "2025-08-21",
+                "Upfront Ventures, Precursor Ventures, K9 Ventures"
+            ],
+            [
+                "",
+                "Layer AI",
+                "F. Burcu Ozcengiz (Hakguder), Mehmet Ecevit, Volkan Gurel",
+                "Volkan Gurel",
+                "volkan@layer.co\nvolkan@layer.ai\nvolgurel@gmail.com\npackersmoversinternational@gmail.com",
+                "https://www.linkedin.com/in/volkangurel",
+                "sent",
+                null,
+                null,
+                null,
+                "https://layer.ai",
+                "Artificial Intelligence (AI), Gaming, Generative AI, Machine Learning",
+                "Seed",
+                "18.30M",
+                "2025-05-14",
+                "FJ Labs, Hummingbird Ventures, GFR Fund, The Games Fund, 500 Emerging Europe"
+            ],
+            [
+                "",
+                "Deep Cogito",
+                "Dhruv Malrana, Drishan Arora",
+                "Drishan Arora",
+                "drishan@deepcogito.com\ndrishan@google.com\ndrishanarora@gmail.com",
+                "https://www.linkedin.com/in/drishanarora",
+                "sent",
+                null,
+                "Ian Ranahan – COO & CFO",
+                "https://www.linkedin.com/in/ian-ranahan",
+                "https://www.deepcogito.com/",
+                "Artificial Intelligence (AI), Machine Learning, Software",
+                "Seed",
+                "13.00M",
+                "2025-07-31",
+                "South Park Commons, Benchmark"
+            ],
+            [
+                "",
+                "Observo AI",
+                "Gurjeet Arora, Ricky Arora",
+                "Rick Arora",
+                "ricky.arora@rubrik.com\narora.s.ricky@gmail.com\narorasricky@gmail.com",
+                "https://www.linkedin.com/in/rickyarora",
+                "sent",
+                "yes",
+                "Ricky Arora – Co-Founder and COO",
+                "https://www.linkedin.com/in/rickyarora",
+                "http://www.observo.ai",
+                "Artificial Intelligence (AI), Cyber Security, DevOps, SaaS",
+                "Seed",
+                "15.00M",
+                "2025-01-30",
+                "Lightspeed Venture Partners, Felicis, Varsha Rao"
+            ],
+            [
+                "",
+                "Nauta",
+                null,
+                "Valentina Jordan",
+                "valentina@getnauta.com",
+                "https://www.linkedin.com/in/valentinajordangartner",
+                "sent",
+                null,
+                "Dylan Scott – Chief Operating Officer",
+                "https://www.linkedin.com/in/dylan-scott-8399782a2",
+                "https://www.getnauta.com",
+                "Generative AI, Logistics, SaaS, Supply Chain Management",
+                "Seed",
+                "7.00M",
+                "2025-08-26",
+                "Juan Jose Gonzales, Construct Capital, Predictive, Simon Borrero, Waikit Lau"
+            ],
+            [
+                "",
+                "JotPsych",
+                "Jackson Bierfeldt, Nathan Peereboom",
+                "Nathan Peereboom",
+                "nathan@jotpsych.com",
+                "https://www.linkedin.com/in/nathanpeereboom",
+                "sent",
+                null,
+                null,
+                null,
+                "https://www.jotpsych.com",
+                "Artificial Intelligence (AI), Document Preparation, Health Care, Therapeutics",
+                "Seed",
+                "5.00M",
+                "2025-07-29",
+                "Base10 Partners"
+            ],
+            [
+                "",
+                "Menos AI",
+                null,
+                "William J. Wu",
+                "williamjunchenwu@gmail.com",
+                "https://www.linkedin.com/in/williamjunchenwu",
+                "sent",
+                "yes",
+                null,
+                null,
+                "https://www.menosai.com/",
+                "Artificial Intelligence (AI), Asset Management, Business Development",
+                "Seed",
+                "5.20M",
+                "2025-08-06",
+                "TSVC"
+            ],
+            [
+                "",
+                "Memories.ai",
+                "Ben Zhou, Shawn Shen",
+                "Shawn Shen",
+                "shawn.shen@memories.ai",
+                "https://www.linkedin.com/in/shawn-shen-jx",
+                "1",
+                null,
+                null,
+                null,
+                "https://memories.ai/",
+                "Artificial Intelligence (AI), Information Technology, Internet, Video",
+                "Seed",
+                "8.00M",
+                "2025-07-24",
+                "Fusion Fund, Seedcamp, Samsung NEXT, Crane Venture Partners, Susa Ventures"
+            ],
+            [
+                "",
+                "SplxAI",
+                "Ante Gojsalic, Kristian Kamber",
+                "Kristian Kamber",
+                "kris@splx.ai",
+                "https://www.linkedin.com/in/kristian-kamber-b4b05a68",
+                "1",
+                null,
+                "Leonardo Von Prellwitz - Chief Operating Officer",
+                null,
+                "https://splx.ai",
+                "Artificial Intelligence (AI), Generative AI, SaaS, Security",
+                "Seed",
+                "9.00M",
+                "2025-03-26",
+                "Inovo.vc, LAUNCHub Ventures, Rain Capital, DNV, Runtime Ventures"
+            ],
+            [
+                "",
+                "Amigo AI",
+                "Ali Khokhar, John Xing",
+                "Ali Khokhar",
+                "ali@amigo.ai",
+                "https://www.linkedin.com/in/khokharali",
+                "1",
+                null,
+                " ",
+                " ",
+                "https://amigo.ai",
+                "Artificial Intelligence (AI), B2B, Enterprise Software, Generative AI, Software",
+                "Seed",
+                "6.30M",
+                "2024-11-21",
+                "General Catalyst, GSV Ventures, Comma Capital, Coho Deeptech, Ride Ventures"
+            ],
+            [
+                "",
+                "Sequifi",
+                "Roshan Kumar",
+                "Roshan Kumar",
+                "r.kumar@sequifi.com",
+                "https://www.linkedin.com/in/roshankumars",
+                "1",
+                null,
+                "Adam Duerschmidt – Chief Operating Officer",
+                null,
+                "https://www.sequifi.com",
+                "Human Resources, SaaS, Software",
+                "Seed",
+                "6.70M",
+                "2025-08-26",
+                "Cervin Ventures, Tokyo Black, Frazier Group, Roshan Kumar"
+            ],
+            [
+                "",
+                "Sapien",
+                "Edison Qu, Henry Chen, Kelly Ryan, Trevor Koverko",
+                "Rowan Stone",
+                "ronnachum13@gmail.com",
+                "https://www.linkedin.com/in/ron-nachum",
+                null,
+                null,
+                "Henry Chen – COO and co-founder",
+                "https://rocketreach.co/henry-chen-email_645721725",
+                "https://www.sapien.io",
+                "Artificial Intelligence (AI), Data Management, Information Technology",
+                "Seed",
+                "15.50M",
+                "2024-10-30",
+                "Variant, Yield Guild Games, Animoca Ventures, Primitive Ventures, HFO"
+            ],
+            [
+                "",
+                "Pillar Security",
+                "Dor Sarig, Ziv Karliner",
+                "Dor Sarig",
+                "dor@pillar.security",
+                "https://www.linkedin.com/in/dsarig/",
+                "1",
+                null,
+                null,
+                null,
+                "https://pillar.security",
+                "Artificial Intelligence (AI), Cyber Security, Generative AI",
+                "Seed",
+                "9.00M",
+                "2025-04-16",
+                "CrowdStrike, Shield Capital, Golden Ventures, Ground Up Ventures, AWS Startups"
+            ],
+            [
+                "",
+                "Mako",
+                "Waleed Atallah",
+                "Waleed Atallah",
+                "waleed@mako-dev.com",
+                "https://www.linkedin.com/in/waleedatallah/",
+                "1",
+                null,
+                null,
+                null,
+                "https://mako.dev/",
+                "Artificial Intelligence (AI), Software",
+                "Seed",
+                "8.50M",
+                "2025-08-12",
+                "Neo, K5 Global, M13, Flybridge, Irregular Expressions"
+            ],
+            [
+                "",
+                "Central",
+                "Josh Wymer, Nilay Modi, Pranav Kashyap",
+                "Josh Wymer",
+                "pr1mo029@netscape.com\npr1mo029@gte.net\nwymerbaseball14@gmail.com\nj.mcclellan@hotmail.com",
+                "https://www.linkedin.com/in/joshwymer",
+                "1",
+                null,
+                null,
+                null,
+                "https://centralhq.com/",
+                "Artificial Intelligence (AI), B2B, Bookkeeping and Payroll, FinTech, Software",
+                "Seed",
+                "9.10M",
+                "2025-08-27",
+                "Alumni Ventures, Y Combinator, First Round Capital, Kulveer Taggar, Richard Aberman"
+            ],
+            [
+                "",
+                "Cambridge Terahertz",
+                "Anand Dixit, Nathan Monroe",
+                "Nathan Monroe",
+                "nathan@thzcorp.com",
+                "https://www.linkedin.com/in/natmon",
+                "1",
+                null,
+                null,
+                null,
+                "https://thzcorp.com",
+                "Business Development, Information Technology, Internet, SaaS",
+                "Seed",
+                "12.01M",
+                "2025-07-21",
+                "Felicis, SBXi, Amazon Industrial Innovation Fund"
+            ],
+            [
+                "",
+                "Dyna Robotics",
+                null,
+                "Lindon Gao",
+                "lindon@dyna.co",
+                "https://www.linkedin.com/in/lindon-gao",
+                "1",
+                null,
+                null,
+                null,
+                "https://dynarobotics.ai",
+                "Artificial Intelligence (AI), Robotics",
+                "Seed",
+                "23.50M",
+                "2025-03-25",
+                "First Round Capital, CRV"
+            ],
+            [
+                "",
+                "Kira",
+                "Camilo Jimenez, Edrizio De La Cruz, José Alberto",
+                "Edrizio De La Cruz",
+                "edrizio@kirafin.ai",
+                "https://www.linkedin.com/in/edrizio-de-la-cruz",
+                "1",
+                null,
+                null,
+                null,
+                "https://www.kirafin.ai/",
+                "Artificial Intelligence (AI), Financial Services, FinTech",
+                "Seed",
+                "8.70M",
+                "2025-08-25",
+                "Stellar Development Foundation, VamosVentures, Credibly Neutral, Blockchange Ventures, Michael Seibel"
+            ],
+            [
+                "",
+                "Continua AI, Inc.",
+                "David Petrou",
+                "David Petrou",
+                "contact@continua.ai",
+                "https://www.linkedin.com/in/dpetrou",
+                "1",
+                null,
+                null,
+                null,
+                "https://continua.ai/",
+                "Artificial Intelligence (AI)",
+                "Seed",
+                "8.00M",
+                "2025-08-12",
+                "Bessemer Venture Partners, GV, Jeff Dean, Eoghan McCabe, Spencer Kimball"
+            ],
+            [
+                "",
+                "Empirical Security",
+                null,
+                "Ed Bellis",
+                "eddieb4@netscape.com\ned@honeyapps.com\ned.bellis@gmail.com\nebellis@comcast.net",
+                "https://www.linkedin.com/in/bellis",
+                "1",
+                null,
+                null,
+                null,
+                "https://www.empiricalsecurity.com/",
+                "Artificial Intelligence (AI), Cyber Security, Network Security",
+                "Seed",
+                "11.94M",
+                "2025-07-17",
+                "HPA Holding, Costanoa Ventures, Sixty Degree Capital, DNX Ventures, Gerhard Eschelbeck"
+            ],
+            [
+                "",
+                "AgentSmyth",
+                "Daniel McCooey, Michael Block, Pulkit Jaiswal",
+                "Pulkit Jaiswal",
+                "p@agentsmyth.com",
+                "https://www.linkedin.com/in/pulkitjaiswal",
+                "1",
+                null,
+                "Michael Block",
+                null,
+                "https://www.agentsmyth.com",
+                "Artificial Intelligence (AI), Financial Services, Trading Platform",
+                "Seed",
+                "11.20M",
+                "2025-06-02",
+                "BNY, Thomson Reuters Ventures, FinTech Collective, systemic ventures, Michael Rafferty"
+            ],
+            [
+                "",
+                "Gail",
+                "Matthew Vega-Sanz, Michael Vega-Sanz",
+                "Matthew Vega-Sanz",
+                "matthew@meetgail.com",
+                "https://www.linkedin.com/in/matthew-vega-sanz",
+                "1",
+                null,
+                null,
+                null,
+                "https://www.meetgail.com",
+                "Artificial Intelligence (AI), Business Development, Information Technology",
+                "Seed",
+                "8.20M",
+                "2025-05-21",
+                "NextView Ventures, H20 Capital, Act One Ventures, A15, Mangusta Capital"
+            ],
+            [
+                "",
+                "Siena AI",
+                "Andrei Negrau, Lisa Popovici",
+                "Andrei Negrau",
+                "andrei@siena.cx",
+                "https://www.linkedin.com/in/negrau",
+                "1",
+                null,
+                "Paweł Uziembło - Director of Finance & Operations",
+                "https://pl.linkedin.com/in/pawe%C5%82-uziemb%C5%82o-34645156",
+                "https://siena.cx",
+                "Artificial Intelligence (AI), E-Commerce, Enterprise Software, Machine Learning, Software",
+                "Seed",
+                "11.05M",
+                "2024-09-01",
+                "Sierra Ventures, Village Global, GapMinder VC, Aglaé Ventures, SuperAngel.Fund"
+            ],
+            [
+                "",
+                "Lyra",
+                null,
+                "Courtne Marland",
+                "courtne@lyra.so",
+                "https://www.linkedin.com/in/courtnemarland",
+                "1",
+                null,
+                "Connie Chen, MD – Chief Operating Officer & Chief Medical Officer",
+                "https://www.linkedin.com/in/connieechen",
+                "https://lyra.so/",
+                "Artificial Intelligence (AI), Software",
+                "Seed",
+                "6.00M",
+                "2025-07-24",
+                "468 Capital, Y Combinator, Pioneer Fund, Rebel Fund, Transpose Platform Management"
+            ],
+            [
+                "",
+                "Anoki AI",
+                "Raghu Kodige",
+                "Raghu Kodige",
+                "raghu@anoki.tv",
+                "https://www.linkedin.com/in/raghukodige",
+                "1",
+                null,
+                null,
+                null,
+                "https://anoki.ai/",
+                "Artificial Intelligence (AI), Information Technology, Media and Entertainment, TV, Video Advertising",
+                "Seed",
+                "18.52M",
+                "2025-06-30",
+                "Correlation Ventures, Streamlined Ventures, Protagonist, AperiamVentures"
+            ],
+            [
+                "",
+                "Rhizome",
+                "Mishal Thadani, Rahul Dubey",
+                "Mishal Thadani",
+                "mishal.thadani@rhizomedata.com",
+                "https://www.linkedin.com/in/mishal-thadani",
+                "1",
+                null,
+                null,
+                null,
+                "https://www.rhizomedata.com",
+                "Artificial Intelligence (AI), Enterprise Software, Facilities Support Services, Infrastructure, Power Grid",
+                "Seed",
+                "10.00M",
+                "2025-05-21",
+                "Base10 Partners, Everywhere Ventures, Convective Capital, StepChange, MCJ"
+            ],
+            [
+                "",
+                "Augment",
+                null,
+                "Harish Abbott",
+                "dave@goaugment.io",
+                "https://www.linkedin.com/in/habbott",
+                "1",
+                null,
+                null,
+                null,
+                "https://www.goaugment.com/",
+                "Artificial Intelligence (AI), Logistics, Transportation",
+                "Seed",
+                "25.00M",
+                "2025-03-18",
+                "8VC"
+            ],
+            [
+                "",
+                "Parter",
+                "Asaf Israelit",
+                "Asaf Israelit",
+                "asaf@parter.ai",
+                "https://www.linkedin.com/in/asaf-israelit",
+                "1",
+                null,
+                null,
+                null,
+                "https://parter.ai/",
+                "Artificial Intelligence (AI), Supply Chain Management",
+                "Seed",
+                "5.50M",
+                "2025-07-07",
+                "StageOne Ventures, Mercer Ventures, Zenda, Ariel Maislos, Shmil Levy"
+            ],
+            [
+                "",
+                "Agree.com",
+                "Evan Dudla, Martin Ringlein, Will Hubbard",
+                "Marty Ringlein",
+                "marty@agree.com",
+                "https://www.linkedin.com/in/martymadrid",
+                "1",
+                null,
+                "Will Hubbard – Co-Founder & COO",
+                "https://www.linkedin.com/in/will-hubbard-e196",
+                "https://agree.com",
+                "Financial Services, FinTech, Payments, SaaS",
+                "Seed",
+                "10.20M",
+                "2025-05-06",
+                "Hustle Fund, New Enterprise Associates, Everywhere Ventures, 8-Bit Capital, Blank Ventures"
+            ]
+        ]
+    }
+};
+        
+        let filteredData = JSON.parse(JSON.stringify(allData));
+        let currentSheet = '';
+        let editMode = false;
+        let selectedRows = new Set();
+        let copiedRows = null;
+        let lastSelectedRow = null;
+        let undoStack = [];
+        const MAX_UNDO_STEPS = 50;
+        
+        // List of approved LinkedIn URLs (to be populated)
+        const approvedLinkedInUrls = [];
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            markApprovedLinkedInApplications();
+            sortRowsByCheckbox();
+            createTabs();
+            if (Object.keys(allData).length > 0) {
+                const firstSheet = Object.keys(allData)[0];
+                switchSheet(firstSheet);
+            }
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                if (!searchTerm) {
+                    filteredData = JSON.parse(JSON.stringify(allData));
+                } else {
+                    filteredData = {};
+                    Object.keys(allData).forEach(sheetName => {
+                        const sheet = allData[sheetName];
+                        const filteredRows = sheet.data.filter(row => {
+                            return row.some(cell => {
+                                const cellStr = String(cell || '').toLowerCase();
+                                return cellStr.includes(searchTerm);
+                            });
+                        });
+                        filteredData[sheetName] = {
+                            columns: sheet.columns,
+                            data: filteredRows
+                        };
+                    });
+                }
+                if (currentSheet) {
+                    displayTable(currentSheet);
+                    updateStats(currentSheet);
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (!editMode) return;
+                
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'n') {
+                        e.preventDefault();
+                        addRow();
+                    } else if (e.key === 'c') {
+                        e.preventDefault();
+                        copySelectedRows();
+                    } else if (e.key === 'v') {
+                        e.preventDefault();
+                        pasteRows();
+                    } else if (e.key === 'z') {
+                        e.preventDefault();
+                        undo();
+                    }
+                } else if (e.key === 'Delete') {
+                    e.preventDefault();
+                    deleteSelectedRows();
+                }
+            });
+        });
+        
+        function markApprovedLinkedInApplications() {
+            // Normalize URL for comparison
+            function normalizeUrl(url) {
+                if (!url) return '';
+                let normalized = String(url).trim().toLowerCase();
+                normalized = normalized.replace(/^https?:\/\//, '');
+                normalized = normalized.replace(/^www\./, '');
+                normalized = normalized.replace(/\/$/, '');
+                return normalized;
+            }
+            
+            approvedLinkedInUrls.forEach(approvedUrl => {
+                const normalizedApproved = normalizeUrl(approvedUrl);
+                
+                Object.keys(allData).forEach(sheetName => {
+                    const sheet = allData[sheetName];
+                    if (!sheet || !sheet.data) return;
+                    
+                    // Find LinkedIn column index
+                    let linkedInColIndex = -1;
+                    sheet.columns.forEach((col, idx) => {
+                        const colLower = col.toLowerCase();
+                        if ((colLower.includes('ceo linkedin') || colLower.includes('linkedin')) && 
+                            !colLower.includes('request') && !colLower.includes('coo')) {
+                            linkedInColIndex = idx;
+                        }
+                    });
+                    
+                    if (linkedInColIndex < 0) return;
+                    
+                    // Find checkbox column (first column)
+                    const checkboxColIndex = 0;
+                    
+                    // Mark matching rows
+                    sheet.data.forEach(row => {
+                        if (row[linkedInColIndex]) {
+                            const rowLinkedIn = normalizeUrl(row[linkedInColIndex]);
+                            if (rowLinkedIn === normalizedApproved) {
+                                row[checkboxColIndex] = '1';
+                            }
+                        }
+                    });
+                });
+            });
+        }
+        
+        function sortRowsByCheckbox() {
+            Object.keys(allData).forEach(sheetName => {
+                const sheet = allData[sheetName];
+                if (!sheet || !sheet.data) return;
+                
+                sheet.data.sort((a, b) => {
+                    const aChecked = a[0] && (String(a[0]).toLowerCase() === '是' || 
+                                               String(a[0]).toLowerCase() === 'yes' || 
+                                               a[0] === '1');
+                    const bChecked = b[0] && (String(b[0]).toLowerCase() === '是' || 
+                                               String(b[0]).toLowerCase() === 'yes' || 
+                                               b[0] === '1');
+                    if (aChecked && !bChecked) return -1;
+                    if (!aChecked && bChecked) return 1;
+                    return 0;
+                });
+            });
+        }
+        
+        function createTabs() {
+            const tabsContainer = document.getElementById('tabs');
+            tabsContainer.innerHTML = '';
+            
+            Object.keys(allData).forEach(sheetName => {
+                const tab = document.createElement('button');
+                tab.className = 'tab';
+                tab.textContent = sheetName;
+                tab.onclick = () => switchSheet(sheetName);
+                tabsContainer.appendChild(tab);
+            });
+        }
+        
+        function switchSheet(sheetName) {
+            currentSheet = sheetName;
+            selectedRows.clear();
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent === sheetName) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            document.getElementById('summaryBtn').classList.remove('active');
+            document.getElementById('viewMode').textContent = 'Current Sheet';
+            
+            displayTable(sheetName);
+            updateStats(sheetName);
+        }
+        
+        function toggleEditMode() {
+            const checkbox = document.getElementById('editModeCheckbox');
+            editMode = checkbox.checked;
+            
+            const toolbar = document.getElementById('editToolbar');
+            const container = document.querySelector('.container');
+            if (editMode) {
+                toolbar.classList.add('active');
+                container.classList.add('edit-mode');
+            } else {
+                toolbar.classList.remove('active');
+                container.classList.remove('edit-mode');
+                selectedRows.clear();
+                updateRowSelection();
+                undoStack = [];
+                updateUndoButton();
+            }
+            
+            // Re-render table to show/hide row selector column
+            if (currentSheet) {
+                displayTable(currentSheet);
+            }
+            
+            updateAllCellsEditable();
+            updateAllCheckboxesState();
+        }
+        
+        function updateAllCellsEditable() {
+            const tbody = document.getElementById('tableBody');
+            const cells = tbody.querySelectorAll('td');
+            cells.forEach(cell => {
+                if (!cell.classList.contains('checkbox-cell') && !cell.classList.contains('row-selector-cell')) {
+                    cell.contentEditable = editMode;
+                }
+            });
+        }
+        
+        function updateAllCheckboxesState() {
+            const checkboxes = document.querySelectorAll('.checkbox-cell input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.disabled = !editMode;
+            });
+        }
+        
+        function displayTable(sheetName) {
+            const data = filteredData[sheetName];
+            if (!data || !data.columns || !data.data) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dataTable').style.display = 'none';
+                document.getElementById('empty').style.display = 'block';
+                return;
+            }
+            
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            
+            // Create header
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            
+            // Add row selector column header (only visible in edit mode)
+            if (editMode) {
+                const selectorTh = document.createElement('th');
+                selectorTh.className = 'row-selector-cell';
+                headerRow.appendChild(selectorTh);
+            }
+            
+            data.columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Create table content
+            tbody.innerHTML = '';
+            data.data.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.dataset.rowIndex = rowIndex;
+                
+                // Add row selector cell (only visible in edit mode)
+                if (editMode) {
+                    const selectorTd = document.createElement('td');
+                    selectorTd.className = 'row-selector-cell';
+                    const circle = document.createElement('div');
+                    circle.className = 'row-selector-circle';
+                    selectorTd.appendChild(circle);
+                    
+                    selectorTd.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        toggleRowSelection(rowIndex, e);
+                    });
+                    
+                    tr.appendChild(selectorTd);
+                }
+                
+                row.forEach((cell, colIndex) => {
+                    const td = document.createElement('td');
+                    const cellValue = cell === null || cell === undefined ? '' : String(cell);
+                    
+                    // First column is checkbox
+                    if (colIndex === 0) {
+                        td.className = 'checkbox-cell';
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.disabled = !editMode;
+                        checkbox.checked = cellValue && (
+                            cellValue.toLowerCase() === '是' || 
+                            cellValue.toLowerCase() === 'yes' || 
+                            cellValue === '1'
+                        );
+                        
+                        checkbox.addEventListener('change', function() {
+                            if (this.disabled) return;
+                            
+                            const oldValue = row[0];
+                            row[0] = this.checked ? '1' : '';
+                            
+                            // Update allData
+                            const sheet = allData[sheetName];
+                            if (sheet && sheet.data) {
+                                const originalRowIndex = rowIndex;
+                                if (originalRowIndex < sheet.data.length) {
+                                    sheet.data[originalRowIndex][0] = row[0];
+                                } else {
+                                    // New row - find by matching key columns
+                                    const keyCols = findKeyColumns(sheet.columns);
+                                    const matchingRow = sheet.data.find(r => {
+                                        return keyCols.every((keyColIdx, idx) => {
+                                            const keyColName = sheet.columns[keyColIdx];
+                                            const filteredKeyColIdx = data.columns.indexOf(keyColName);
+                                            return filteredKeyColIdx >= 0 && 
+                                                   String(r[keyColIdx] || '') === String(row[filteredKeyColIdx] || '');
+                                        });
+                                    });
+                                    if (matchingRow) {
+                                        matchingRow[0] = row[0];
+                                    }
+                                }
+                            }
+                            
+                            saveUndoState({
+                                action: 'checkbox_change',
+                                sheet: sheetName,
+                                rowIndex: originalRowIndex,
+                                column: 0,
+                                oldValue: oldValue,
+                                newValue: row[0]
+                            });
+                            
+                            // Update summary if in summary view
+                            if (document.getElementById('viewMode').textContent === 'Accepted Summary View') {
+                                showSummaryView();
+                            }
+                        });
+                        
+                        td.appendChild(checkbox);
+                    } else {
+                        td.contentEditable = editMode;
+                        td.dataset.originalValue = cellValue;
+                        td.dataset.column = colIndex;
+                        td.dataset.sheet = sheetName;
+                        
+                        // Handle cell editing
+                        td.addEventListener('blur', function() {
+                            const newValue = this.textContent.trim();
+                            const oldValue = this.dataset.originalValue;
+                            
+                            if (newValue !== oldValue) {
+                                row[colIndex] = newValue;
+                                
+                                // Update allData
+                                const sheet = allData[sheetName];
+                                if (sheet && sheet.data) {
+                                    const originalRowIndex = rowIndex;
+                                    if (originalRowIndex < sheet.data.length) {
+                                        sheet.data[originalRowIndex][colIndex] = newValue;
+                                    }
+                                }
+                                
+                                saveUndoState({
+                                    action: 'cell_edit',
+                                    sheet: sheetName,
+                                    rowIndex: originalRowIndex,
+                                    column: colIndex,
+                                    oldValue: oldValue,
+                                    newValue: newValue
+                                });
+                                
+                                this.dataset.originalValue = newValue;
+                            }
+                        });
+                        
+                        // Handle links
+                        if (cellValue.startsWith('http') && colIndex < data.columns.length) {
+                            const colName = data.columns[colIndex].toLowerCase();
+                            if (colName.includes('linkedin') || colName.includes('website') || colName.includes('link')) {
+                                const a = document.createElement('a');
+                                a.href = cellValue;
+                                a.target = '_blank';
+                                a.className = 'link-cell';
+                                a.textContent = cellValue.length > 50 ? cellValue.substring(0, 50) + '...' : cellValue;
+                                td.textContent = '';
+                                td.appendChild(a);
+                            } else {
+                                td.textContent = cellValue;
+                            }
+                        } else {
+                            td.textContent = cellValue;
+                        }
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                
+                // Row selection
+                tr.addEventListener('mousedown', function(e) {
+                    const clickedCell = e.target.closest('td');
+                    if (clickedCell && (clickedCell.classList.contains('checkbox-cell') || clickedCell.classList.contains('row-selector-cell'))) {
+                        return; // Don't select row when clicking checkbox or row selector
+                    }
+                    
+                    if (clickedCell && clickedCell.contentEditable === 'true') {
+                        // Double click to edit
+                        if (e.detail === 2) {
+                            clickedCell.focus();
+                            return;
+                        }
+                        // Single click selects row
+                        toggleRowSelection(rowIndex, e);
+                    } else {
+                        toggleRowSelection(rowIndex, e);
+                    }
+                });
+                
+                tbody.appendChild(tr);
+            });
+            
+            updateRowSelection();
+            updateAllCellsEditable();
+            updateAllCheckboxesState();
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('empty').style.display = 'none';
+            document.getElementById('dataTable').style.display = 'table';
+        }
+        
+        function toggleRowSelection(rowIndex, e) {
+            if (!editMode) return;
+            
+            // Use event parameter or global event object
+            const evt = e || (typeof event !== 'undefined' ? event : null);
+            const modifierPressed = evt && (evt.ctrlKey || evt.metaKey);
+            const shiftPressed = evt && evt.shiftKey;
+            
+            if (shiftPressed && lastSelectedRow !== null) {
+                const start = Math.min(lastSelectedRow, rowIndex);
+                const end = Math.max(lastSelectedRow, rowIndex);
+                for (let i = start; i <= end; i++) {
+                    selectedRows.add(i);
+                }
+            } else {
+                if (!modifierPressed) {
+                    selectedRows.clear();
+                }
+                if (selectedRows.has(rowIndex)) {
+                    selectedRows.delete(rowIndex);
+                } else {
+                    selectedRows.add(rowIndex);
+                }
+            }
+            
+            lastSelectedRow = rowIndex;
+            updateRowSelection();
+        }
+        
+        function updateRowSelection() {
+            const tbody = document.getElementById('tableBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            rows.forEach((row, index) => {
+                const isSelected = selectedRows.has(index);
+                row.classList.toggle('selected', isSelected);
+                
+                // Update row selector circle
+                const selectorCell = row.querySelector('.row-selector-cell');
+                if (selectorCell) {
+                    selectorCell.classList.toggle('selected', isSelected);
+                }
+            });
+            
+            document.getElementById('deleteRowBtn').disabled = selectedRows.size === 0;
+            document.getElementById('copyBtn').disabled = selectedRows.size === 0;
+        }
+        
+        function addRow() {
+            if (!editMode || !currentSheet) return;
+            
+            const sheet = allData[currentSheet];
+            if (!sheet) return;
+            
+            const newRow = new Array(sheet.columns.length).fill('');
+            newRow[0] = ''; // Checkbox column
+            
+            sheet.data.push(newRow);
+            filteredData[currentSheet].data.push(newRow);
+            
+            saveUndoState({
+                action: 'add_row',
+                sheet: currentSheet,
+                rowIndex: sheet.data.length - 1
+            });
+            
+            displayTable(currentSheet);
+            updateStats(currentSheet);
+        }
+        
+        function deleteSelectedRows() {
+            if (!editMode || selectedRows.size === 0) {
+                if (!editMode) alert('Please enable Edit Mode first');
+                if (selectedRows.size === 0) alert('Please select rows to delete');
+                return;
+            }
+            
+            if (!confirm(`Delete ${selectedRows.size} row(s)?`)) return;
+            
+            const sheet = allData[currentSheet];
+            if (!sheet) return;
+            
+            const indicesToDelete = Array.from(selectedRows).sort((a, b) => b - a);
+            const deletedRows = [];
+            
+            indicesToDelete.forEach(index => {
+                if (index < sheet.data.length) {
+                    deletedRows.push({
+                        index: index,
+                        data: JSON.parse(JSON.stringify(sheet.data[index]))
+                    });
+                    sheet.data.splice(index, 1);
+                    filteredData[currentSheet].data.splice(index, 1);
+                }
+            });
+            
+            saveUndoState({
+                action: 'delete_rows',
+                sheet: currentSheet,
+                deletedRows: deletedRows
+            });
+            
+            selectedRows.clear();
+            displayTable(currentSheet);
+            updateStats(currentSheet);
+        }
+        
+        function copySelectedRows() {
+            if (selectedRows.size === 0) return;
+            
+            const sheet = filteredData[currentSheet];
+            if (!sheet) return;
+            
+            copiedRows = Array.from(selectedRows).map(index => {
+                return JSON.parse(JSON.stringify(sheet.data[index]));
+            });
+        }
+        
+        function pasteRows() {
+            if (!copiedRows || copiedRows.length === 0) return;
+            if (!editMode) return;
+            
+            const sheet = allData[currentSheet];
+            if (!sheet) return;
+            
+            const insertIndex = lastSelectedRow !== null ? lastSelectedRow + 1 : sheet.data.length;
+            
+            copiedRows.forEach((rowData, idx) => {
+                const newRow = JSON.parse(JSON.stringify(rowData));
+                newRow[0] = ''; // Reset checkbox
+                sheet.data.splice(insertIndex + idx, 0, newRow);
+                filteredData[currentSheet].data.splice(insertIndex + idx, 0, newRow);
+            });
+            
+            saveUndoState({
+                action: 'paste_rows',
+                sheet: currentSheet,
+                insertIndex: insertIndex,
+                count: copiedRows.length
+            });
+            
+            displayTable(currentSheet);
+            updateStats(currentSheet);
+        }
+        
+        function saveUndoState(action) {
+            undoStack.push(action);
+            if (undoStack.length > MAX_UNDO_STEPS) {
+                undoStack.shift();
+            }
+            updateUndoButton();
+        }
+        
+        function undo() {
+            if (undoStack.length === 0) return;
+            
+            const action = undoStack.pop();
+            
+            switch(action.action) {
+                case 'cell_edit':
+                    const sheet = allData[action.sheet];
+                    if (sheet && sheet.data[action.rowIndex]) {
+                        sheet.data[action.rowIndex][action.column] = action.oldValue;
+                    }
+                    break;
+                case 'checkbox_change':
+                    const sheet2 = allData[action.sheet];
+                    if (sheet2 && sheet2.data[action.rowIndex]) {
+                        sheet2.data[action.rowIndex][action.column] = action.oldValue;
+                    }
+                    break;
+                case 'add_row':
+                    const sheet3 = allData[action.sheet];
+                    if (sheet3) {
+                        sheet3.data.splice(action.rowIndex, 1);
+                    }
+                    break;
+                case 'delete_rows':
+                    const sheet4 = allData[action.sheet];
+                    if (sheet4) {
+                        action.deletedRows.forEach((deletedRow) => {
+                            const index = deletedRow.index;
+                            const data = deletedRow.data;
+                            sheet4.data.splice(index, 0, data);
+                        });
+                    }
+                    break;
+                case 'paste_rows':
+                    const sheet5 = allData[action.sheet];
+                    if (sheet5) {
+                        for (let i = 0; i < action.count; i++) {
+                            sheet5.data.splice(action.insertIndex, 1);
+                        }
+                    }
+                    break;
+            }
+            
+            if (currentSheet) {
+                filteredData = JSON.parse(JSON.stringify(allData));
+                displayTable(currentSheet);
+                updateStats(currentSheet);
+            }
+            
+            updateUndoButton();
+        }
+        
+        function updateUndoButton() {
+            document.getElementById('undoBtn').disabled = undoStack.length === 0;
+        }
+        
+        function findKeyColumns(columns) {
+            const keyColumnNames = ['Company Name', 'Organization Name', 'VC Name'];
+            const keyIndices = [];
+            columns.forEach((col, idx) => {
+                if (keyColumnNames.some(key => col.includes(key))) {
+                    keyIndices.push(idx);
+                }
+            });
+            return keyIndices.length > 0 ? keyIndices : [1]; // Default to second column if no key columns found
+        }
+        
+        function updateStats(sheetName) {
+            const data = filteredData[sheetName];
+            if (data && data.data) {
+                document.getElementById('totalRows').textContent = allData[sheetName].data.length;
+                document.getElementById('filteredRows').textContent = data.data.length;
+                document.getElementById('totalCols').textContent = data.columns.length;
+                document.getElementById('currentSheet').textContent = sheetName;
+            }
+        }
+        
+        function getSummaryData() {
+            const summaryData = [];
+            
+            Object.keys(allData).forEach(sheetName => {
+                const sheet = allData[sheetName];
+                if (!sheet || !sheet.data) return;
+                
+                let companyNameIndex = -1;
+                let ceoLinkedInIndex = -1;
+                let industryIndex = -1;
+                
+                sheet.columns.forEach((col, idx) => {
+                    const colLower = col.toLowerCase();
+                    if (colLower.includes('company name') || colLower.includes('organization name') || colLower.includes('vc name')) {
+                        companyNameIndex = idx;
+                    }
+                    if ((colLower.includes('ceo linkedin') || colLower.includes('linkedin')) && !colLower.includes('request') && !colLower.includes('coo')) {
+                        ceoLinkedInIndex = idx;
+                    }
+                    if (colLower.includes('industry') || colLower.includes('industries')) {
+                        industryIndex = idx;
+                    }
+                });
+                
+                sheet.data.forEach(row => {
+                    const isChecked = row[0] && (
+                        String(row[0]).toLowerCase() === '是' || 
+                        String(row[0]).toLowerCase() === 'yes' || 
+                        row[0] === '1'
+                    );
+                    
+                    if (isChecked) {
+                        let industryValue = industryIndex >= 0 && row[industryIndex] ? String(row[industryIndex]) : '-';
+                        
+                        if (sheetName === 'Seed Stage VC' && (industryIndex < 0 || !row[industryIndex] || row[industryIndex] === '' || row[industryIndex] === null || industryValue === '-')) {
+                            industryValue = 'venture capital';
+                            if (industryIndex >= 0) {
+                                row[industryIndex] = 'venture capital';
+                            }
+                        }
+                        
+                        summaryData.push({
+                            sheet: sheetName,
+                            companyName: companyNameIndex >= 0 && row[companyNameIndex] ? String(row[companyNameIndex]) : '-',
+                            ceoLinkedIn: ceoLinkedInIndex >= 0 && row[ceoLinkedInIndex] ? String(row[ceoLinkedInIndex]) : '-',
+                            industry: industryValue
+                        });
+                    }
+                });
+            });
+            
+            return summaryData;
+        }
+        
+        function showSummaryView() {
+            const summaryBtn = document.getElementById('summaryBtn');
+            summaryBtn.classList.add('active');
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            const summaryData = getSummaryData();
+            document.getElementById('viewMode').textContent = 'Accepted Summary View';
+            
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            ['Sheet', 'Company Name', 'CEO LinkedIn', 'Industry'].forEach((col, idx) => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                if (idx === 0) {
+                    th.style.textAlign = 'center';
+                }
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            tbody.innerHTML = '';
+            if (summaryData.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 4;
+                td.textContent = 'No checked data available';
+                td.style.textAlign = 'center';
+                td.style.padding = '20px';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            } else {
+                summaryData.forEach(item => {
+                    const tr = document.createElement('tr');
+                    
+                    const tdSheet = document.createElement('td');
+                    tdSheet.textContent = item.sheet;
+                    tdSheet.style.fontWeight = '600';
+                    tdSheet.style.background = '#fff5f5';
+                    tdSheet.style.minWidth = '180px';
+                    tdSheet.style.width = '180px';
+                    tr.appendChild(tdSheet);
+                    
+                    const tdCompany = document.createElement('td');
+                    tdCompany.textContent = item.companyName;
+                    tr.appendChild(tdCompany);
+                    
+                    const tdLinkedIn = document.createElement('td');
+                    if (item.ceoLinkedIn && item.ceoLinkedIn.startsWith('http')) {
+                        const a = document.createElement('a');
+                        a.href = item.ceoLinkedIn;
+                        a.target = '_blank';
+                        a.textContent = item.ceoLinkedIn.length > 50 ? item.ceoLinkedIn.substring(0, 50) + '...' : item.ceoLinkedIn;
+                        a.title = item.ceoLinkedIn;
+                        a.className = 'link-cell';
+                        tdLinkedIn.appendChild(a);
+                    } else {
+                        tdLinkedIn.textContent = item.ceoLinkedIn;
+                    }
+                    tr.appendChild(tdLinkedIn);
+                    
+                    const tdIndustry = document.createElement('td');
+                    tdIndustry.textContent = item.industry;
+                    tr.appendChild(tdIndustry);
+                    
+                    tbody.appendChild(tr);
+                });
+            }
+            
+            document.getElementById('totalRows').textContent = summaryData.length;
+            document.getElementById('filteredRows').textContent = summaryData.length;
+            document.getElementById('totalCols').textContent = '4';
+            document.getElementById('currentSheet').textContent = 'Accepted Summary';
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dataTable').style.display = 'table';
+        }
+        
+        document.getElementById('summaryBtn').addEventListener('click', showSummaryView);
+    </script>
+</body>
+</html>

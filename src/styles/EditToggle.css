@@ -1,0 +1,31 @@
+.edit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  background: var(--bg-paper);
+  border: 2px solid rgba(63, 52, 43, 0.2);
+  border-radius: var(--card-radius);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px var(--muted-shadow-light);
+}
+
+.edit-toggle:hover {
+  border-color: var(--accent-ochre);
+  box-shadow: 0 4px 8px var(--muted-shadow);
+}
+
+.edit-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.edit-toggle label {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink-line);
+  font-family: var(--font-sans);
+}
+

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行选择测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: blue;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #4caf50;
+            color: white;
+        }
+        tr.selected {
+            background-color: rgba(230, 154, 0, 0.15);
+        }
+        .checkbox-cell {
+            text-align: center;
+        }
+        .row-selector-cell {
+            text-align: center;
+            width: 50px;
+        }
+        .row-selector-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            margin: 0 auto;
+        }
+        .row-selector-cell.selected .row-selector-circle {
+            background: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <h1>行选择功能测试</h1>
+    
+    <div class="test-section">
+        <h2>测试说明</h2>
+        <p>这个测试页面用于验证编辑模式下行选择功能，特别是取消选择功能。</p>
+        <p><strong>测试步骤：</strong></p>
+        <ol>
+            <li>点击"启用编辑模式"按钮</li>
+            <li>点击任意行来选择它（行会高亮显示）</li>
+            <li>再次点击已选中的行，应该能取消选择</li>
+            <li>点击checkbox应该能切换checkbox状态</li>
+            <li>点击行选择器圆圈应该能切换选择状态</li>
+        </ol>
+        <button onclick="toggleEditMode()">启用编辑模式</button>
+        <button onclick="clearLog()">清空日志</button>
+        <button onclick="checkSelection()">检查选择状态</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试表格</h2>
+        <table id="testTable">
+            <thead>
+                <tr>
+                    <th class="row-selector-cell"></th>
+                    <th>linkedin accepted?</th>
+                    <th>Company Name</th>
+                    <th>CEO</th>
+                    <th>CEO Linkedin</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr data-row="0">
+                    <td class="row-selector-cell" onclick="toggleRowSelection(0, event)">
+                        <div class="row-selector-circle"></div>
+                    </td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="handleCheckboxChange(0, event)">
+                    </td>
+                    <td contenteditable="true">Company A</td>
+                    <td contenteditable="true">CEO A</td>
+                    <td>https://www.linkedin.com/in/test1</td>
+                </tr>
+                <tr data-row="1">
+                    <td class="row-selector-cell" onclick="toggleRowSelection(1, event)">
+                        <div class="row-selector-circle"></div>
+                    </td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="handleCheckboxChange(1, event)">
+                    </td>
+                    <td contenteditable="true">Company B</td>
+                    <td contenteditable="true">CEO B</td>
+                    <td>https://www.linkedin.com/in/test2</td>
+                </tr>
+                <tr data-row="2">
+                    <td class="row-selector-cell" onclick="toggleRowSelection(2, event)">
+                        <div class="row-selector-circle"></div>
+                    </td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="handleCheckboxChange(2, event)">
+                    </td>
+                    <td contenteditable="true">Company C</td>
+                    <td contenteditable="true">CEO C</td>
+                    <td>https://www.linkedin.com/in/test3</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试日志</h2>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let editMode = false;
+        let selectedRows = new Set();
+        let lastSelectedRow = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            log(`编辑模式: ${editMode ? '启用' : '禁用'}`, editMode ? 'success' : 'info');
+            
+            // 更新表格样式
+            const table = document.getElementById('testTable');
+            if (editMode) {
+                table.classList.add('edit-mode');
+            } else {
+                table.classList.remove('edit-mode');
+                selectedRows.clear();
+                updateRowSelection();
+            }
+            
+            // 启用/禁用checkbox
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.disabled = !editMode;
+            });
+        }
+
+        function handleRowClick(rowIndex, e) {
+            if (!editMode) {
+                log('编辑模式未启用', 'error');
+                return;
+            }
+            
+            const clickedCell = e.target.closest('td');
+            const clickedElement = e.target;
+            
+            log(`点击行 ${rowIndex}, 目标: ${clickedElement.tagName}, 单元格类: ${clickedCell?.className || 'none'}`, 'info');
+            
+            // 检查是否点击了checkbox或row selector
+            if (clickedElement?.type === 'checkbox' || 
+                clickedElement?.tagName === 'INPUT' ||
+                clickedCell?.classList.contains('checkbox-cell') || 
+                clickedCell?.classList.contains('row-selector-cell')) {
+                log('点击了checkbox或row selector，跳过行选择', 'info');
+                return;
+            }
+
+            // 如果点击的是链接，不处理行选择
+            if (clickedElement?.tagName === 'A') {
+                log('点击了链接，跳过行选择', 'info');
+                return;
+            }
+
+            const modifierPressed = e.ctrlKey || e.metaKey;
+            const shiftPressed = e.shiftKey;
+            
+            log(`处理行选择: rowIndex=${rowIndex}, modifierPressed=${modifierPressed}, shiftPressed=${shiftPressed}`, 'info');
+            
+            if (shiftPressed && lastSelectedRow !== null) {
+                // Shift + 点击：范围选择
+                const start = Math.min(lastSelectedRow, rowIndex);
+                const end = Math.max(lastSelectedRow, rowIndex);
+                log(`范围选择: ${start} 到 ${end}`, 'info');
+                for (let i = start; i <= end; i++) {
+                    selectedRows.add(i);
+                }
+            } else {
+                const newSelected = new Set(selectedRows);
+                if (modifierPressed) {
+                    // Ctrl/Cmd + 点击：切换选择状态
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                        log(`取消选择行 ${rowIndex}`, 'success');
+                    } else {
+                        newSelected.add(rowIndex);
+                        log(`选择行 ${rowIndex}`, 'success');
+                    }
+                } else {
+                    // 普通点击：如果已选中则取消，否则只选择这一个
+                    if (newSelected.has(rowIndex)) {
+                        // 已选中，取消选择
+                        newSelected.delete(rowIndex);
+                        log(`取消选择行 ${rowIndex}`, 'success');
+                    } else {
+                        // 未选中，清除其他选择，只选择这一个
+                        newSelected.clear();
+                        newSelected.add(rowIndex);
+                        log(`选择行 ${rowIndex}`, 'success');
+                    }
+                }
+                selectedRows = newSelected;
+            }
+            
+            lastSelectedRow = rowIndex;
+            updateRowSelection();
+        }
+
+        function toggleRowSelection(rowIndex, e) {
+            if (!editMode) return;
+            e.stopPropagation();
+            
+            const modifierPressed = e.ctrlKey || e.metaKey;
+            const shiftPressed = e.shiftKey;
+            
+            log(`行选择器点击: rowIndex=${rowIndex}`, 'info');
+            
+            if (shiftPressed && lastSelectedRow !== null) {
+                const start = Math.min(lastSelectedRow, rowIndex);
+                const end = Math.max(lastSelectedRow, rowIndex);
+                for (let i = start; i <= end; i++) {
+                    selectedRows.add(i);
+                }
+            } else {
+                const newSelected = modifierPressed ? new Set(selectedRows) : new Set(selectedRows);
+                if (modifierPressed) {
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                        log(`取消选择行 ${rowIndex}`, 'success');
+                    } else {
+                        newSelected.add(rowIndex);
+                        log(`选择行 ${rowIndex}`, 'success');
+                    }
+                } else {
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                        log(`取消选择行 ${rowIndex}`, 'success');
+                    } else {
+                        newSelected.clear();
+                        newSelected.add(rowIndex);
+                        log(`选择行 ${rowIndex}`, 'success');
+                    }
+                }
+                selectedRows = newSelected;
+            }
+            
+            lastSelectedRow = rowIndex;
+            updateRowSelection();
+        }
+
+        function handleCheckboxChange(rowIndex, e) {
+            e.stopPropagation();
+            log(`Checkbox ${rowIndex} 改变: ${e.target.checked}`, 'success');
+        }
+
+        function updateRowSelection() {
+            document.querySelectorAll('tbody tr').forEach((row, index) => {
+                const isSelected = selectedRows.has(index);
+                row.classList.toggle('selected', isSelected);
+                
+                const selectorCell = row.querySelector('.row-selector-cell');
+                if (selectorCell) {
+                    selectorCell.classList.toggle('selected', isSelected);
+                }
+            });
+            
+            log(`当前选中行: [${Array.from(selectedRows).join(', ')}]`, 'info');
+        }
+
+        function checkSelection() {
+            log(`当前选择状态:`, 'info');
+            log(`选中行数量: ${selectedRows.size}`, 'info');
+            log(`选中的行索引: [${Array.from(selectedRows).join(', ')}]`, 'info');
+            log(`最后选中的行: ${lastSelectedRow}`, 'info');
+        }
+
+        // 初始化表格行点击事件
+        document.addEventListener('DOMContentLoaded', () => {
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+                // 为contentEditable单元格添加双击事件
+                const editableCells = row.querySelectorAll('td[contenteditable="true"]');
+                editableCells.forEach(cell => {
+                    cell.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        log(`双击单元格行 ${index}，进入编辑模式`, 'info');
+                    });
+                    
+                    cell.addEventListener('mousedown', (e) => {
+                        if (editMode && e.detail === 1) {
+                            // 单次点击：阻止默认行为（阻止获得焦点），让行选择处理
+                            e.preventDefault();
+                            log(`阻止contentEditable获得焦点，行 ${index}`, 'info');
+                        }
+                    });
+                });
+                
+                // 为整行添加点击事件
+                row.addEventListener('mousedown', (e) => {
+                    const clickedCell = e.target.closest('td');
+                    const clickedElement = e.target;
+                    
+                    if (clickedCell?.classList.contains('checkbox-cell') || 
+                        clickedCell?.classList.contains('row-selector-cell') ||
+                        clickedElement?.type === 'checkbox' ||
+                        clickedElement?.tagName === 'A' ||
+                        clickedElement?.tagName === 'INPUT') {
+                        return;
+                    }
+                    
+                    handleRowClick(index, e);
+                });
+            });
+            
+            log('测试页面初始化完成', 'success');
+        });
+    </script>
+</body>
+</html>
+

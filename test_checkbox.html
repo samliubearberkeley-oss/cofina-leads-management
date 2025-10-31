@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkbox功能自动化测试</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .control-panel {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .control-panel button {
+      padding: 10px 20px;
+      margin-right: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #4CAF50;
+      color: white;
+    }
+    .control-panel button:hover {
+      background: #45a049;
+    }
+    .control-panel button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.running {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .test-results {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+    }
+    .test-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+    .test-item.pass {
+      background: #d4edda;
+    }
+    .test-item.fail {
+      background: #f8d7da;
+    }
+    .test-item.pending {
+      background: #f0f0f0;
+    }
+    #log {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr.selected {
+      background-color: #e3f2fd !important;
+    }
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #000000;
+    }
+    input[type="checkbox"]:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    .checkbox-cell {
+      text-align: center;
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Checkbox功能自动化测试</h1>
+  
+  <div class="control-panel">
+    <h3>控制面板</h3>
+    <button id="runAllBtn" onclick="runAllTests()">运行所有测试</button>
+    <button id="stopBtn" onclick="stopTests()" disabled>停止测试</button>
+    <button onclick="clearLog()">清空日志</button>
+    <button onclick="resetLocalStorage()">重置LocalStorage</button>
+    <div id="status" class="status" style="display:none;"></div>
+  </div>
+
+  <div class="test-results">
+    <h3>测试结果</h3>
+    <div id="testResults">等待测试...</div>
+    <h4 style="margin-top: 20px;">详细结果:</h4>
+    <div id="detailedResults"></div>
+  </div>
+
+  <div>
+    <h3>测试表格（模拟真实应用）</h3>
+    <button id="editToggle" onclick="toggleEditMode()">启用编辑模式</button>
+    <span id="editStatus" style="margin-left: 10px; font-weight: bold;">编辑模式: 关闭</span>
+    <table id="testTable">
+      <thead>
+        <tr>
+          <th class="checkbox-cell">linkedin accepted?</th>
+          <th>Company Name</th>
+          <th>CEO</th>
+          <th>CEO Linkedin</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- 测试数据会动态插入 -->
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <h3>测试日志</h3>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    let editMode = false;
+    let testData = [
+      { accepted: '', company: 'Company A', ceo: 'CEO A', linkedin: 'https://www.linkedin.com/in/test1' },
+      { accepted: '', company: 'Company B', ceo: 'CEO B', linkedin: 'https://www.linkedin.com/in/test2' },
+      { accepted: '', company: 'Company C', ceo: 'CEO C', linkedin: 'https://www.linkedin.com/in/test3' }
+    ];
+    let isTestRunning = false;
+    let testResults = [];
+
+    function log(message) {
+      const timestamp = new Date().toLocaleTimeString('zh-CN');
+      const logDiv = document.getElementById('log');
+      logDiv.textContent += `[${timestamp}] ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('log').textContent = '';
+    }
+
+    function resetLocalStorage() {
+      localStorage.removeItem('linkedin_accepted_urls');
+      log('✅ LocalStorage已重置');
+      alert('LocalStorage已重置');
+    }
+
+    function toggleEditMode() {
+      editMode = !editMode;
+      document.getElementById('editStatus').textContent = `编辑模式: ${editMode ? '启用' : '关闭'}`;
+      document.getElementById('editToggle').textContent = editMode ? '关闭编辑模式' : '启用编辑模式';
+      renderTable();
+      log(`编辑模式: ${editMode ? '启用' : '关闭'}`);
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      testData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        
+        // Checkbox cell
+        const checkboxTd = document.createElement('td');
+        checkboxTd.className = 'checkbox-cell';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.disabled = !editMode;
+        checkbox.checked = row.accepted === '✓';
+        checkbox.onchange = function(e) {
+          handleCheckboxChange(index, e.target.checked);
+        };
+        checkboxTd.appendChild(checkbox);
+        tr.appendChild(checkboxTd);
+        
+        // Other cells
+        const companyTd = document.createElement('td');
+        companyTd.textContent = row.company;
+        tr.appendChild(companyTd);
+        
+        const ceoTd = document.createElement('td');
+        ceoTd.textContent = row.ceo;
+        tr.appendChild(ceoTd);
+        
+        const linkedinTd = document.createElement('td');
+        linkedinTd.textContent = row.linkedin;
+        tr.appendChild(linkedinTd);
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleCheckboxChange(rowIndex, checked) {
+      const newValue = checked ? '✓' : '';
+      const oldValue = testData[rowIndex].accepted;
+      
+      log(`📝 Checkbox onChange: row=${rowIndex}, oldValue="${oldValue}", newValue="${newValue}", checked=${checked}`);
+      
+      // 更新数据
+      testData[rowIndex].accepted = newValue;
+      
+      // 同步到localStorage（模拟真实应用的行为）
+      syncToLocalStorage(rowIndex, newValue);
+      
+      // 重新渲染表格
+      renderTable();
+      
+      log(`✅ 数据已更新，localStorage已同步`);
+    }
+
+    function syncToLocalStorage(rowIndex, value) {
+      const linkedin = testData[rowIndex].linkedin;
+      
+      // 获取当前的accepted URLs
+      let acceptedUrls = [];
+      try {
+        const stored = localStorage.getItem('linkedin_accepted_urls');
+        if (stored) {
+          acceptedUrls = JSON.parse(stored);
+        }
+      } catch (e) {
+        log('⚠️ localStorage读取失败');
+      }
+      
+      // 更新accepted URLs
+      if (value === '✓') {
+        // 添加到accepted列表
+        if (!acceptedUrls.includes(linkedin)) {
+          acceptedUrls.push(linkedin);
+          log(`➕ 添加到LinkedIn Accepted: ${linkedin}`);
+        }
+      } else {
+        // 从accepted列表移除
+        const index = acceptedUrls.indexOf(linkedin);
+        if (index > -1) {
+          acceptedUrls.splice(index, 1);
+          log(`➖ 从LinkedIn Accepted移除: ${linkedin}`);
+        }
+      }
+      
+      // 保存到localStorage
+      localStorage.setItem('linkedin_accepted_urls', JSON.stringify(acceptedUrls));
+      log(`💾 localStorage已更新，共${acceptedUrls.length}个accepted URLs`);
+    }
+
+    function getAcceptedUrlsFromLocalStorage() {
+      try {
+        const stored = localStorage.getItem('linkedin_accepted_urls');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // 测试函数
+    async function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function setStatus(message, type) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = message;
+      statusDiv.className = `status ${type}`;
+      statusDiv.style.display = 'block';
+    }
+
+    async function test1_EnableEditMode() {
+      log('\n开始测试: 启用编辑模式');
+      if (!editMode) {
+        document.getElementById('editToggle').click();
+        await sleep(100);
+      }
+      const success = editMode === true;
+      log(success ? '✓ 测试通过: 启用编辑模式' : '✗ 测试失败: 启用编辑模式');
+      return { name: '启用编辑模式', pass: success };
+    }
+
+    async function test2_CheckCheckbox() {
+      log('\n开始测试: 选中checkbox');
+      const checkbox = document.querySelector('#tableBody tr:first-child input[type="checkbox"]');
+      const initialChecked = checkbox.checked;
+      const initialValue = testData[0].accepted;
+      
+      log(`初始状态: checked=${initialChecked}, value="${initialValue}"`);
+      
+      // 点击checkbox
+      checkbox.click();
+      await sleep(500);
+      
+      const afterChecked = checkbox.checked;
+      const afterValue = testData[0].accepted;
+      const acceptedUrls = getAcceptedUrlsFromLocalStorage();
+      const inLocalStorage = acceptedUrls.includes(testData[0].linkedin);
+      
+      log(`点击后状态: checked=${afterChecked}, value="${afterValue}"`);
+      log(`localStorage状态: ${inLocalStorage ? '已同步' : '未同步'}`);
+      
+      const success = afterChecked === true && afterValue === '✓' && inLocalStorage;
+      log(success ? '✓ 测试通过: 选中checkbox' : '✗ 测试失败: 选中checkbox');
+      return { name: '选中checkbox', pass: success, details: `checked=${afterChecked}, value="${afterValue}", inLocalStorage=${inLocalStorage}` };
+    }
+
+    async function test3_UncheckCheckbox() {
+      log('\n开始测试: 取消选中checkbox');
+      const checkbox = document.querySelector('#tableBody tr:first-child input[type="checkbox"]');
+      const initialChecked = checkbox.checked;
+      const initialValue = testData[0].accepted;
+      
+      log(`初始状态: checked=${initialChecked}, value="${initialValue}"`);
+      
+      // 如果没有选中，先选中
+      if (!initialChecked) {
+        log('⚠️ checkbox未选中，先选中');
+        checkbox.click();
+        await sleep(500);
+      }
+      
+      // 再次点击取消选中
+      log('点击取消选中...');
+      checkbox.click();
+      await sleep(500);
+      
+      const afterChecked = checkbox.checked;
+      const afterValue = testData[0].accepted;
+      const acceptedUrls = getAcceptedUrlsFromLocalStorage();
+      const notInLocalStorage = !acceptedUrls.includes(testData[0].linkedin);
+      
+      log(`取消选中后状态: checked=${afterChecked}, value="${afterValue}"`);
+      log(`localStorage状态: ${notInLocalStorage ? '已移除' : '未移除'}`);
+      
+      const success = afterChecked === false && afterValue === '' && notInLocalStorage;
+      log(success ? '✓ 测试通过: 取消选中checkbox' : '✗ 测试失败: 取消选中checkbox');
+      return { name: '取消选中checkbox', pass: success, details: `checked=${afterChecked}, value="${afterValue}", notInLocalStorage=${notInLocalStorage}` };
+    }
+
+    async function test4_CheckAgain() {
+      log('\n开始测试: 重新选中checkbox');
+      const checkbox = document.querySelector('#tableBody tr:first-child input[type="checkbox"]');
+      
+      checkbox.click();
+      await sleep(500);
+      
+      const afterChecked = checkbox.checked;
+      const afterValue = testData[0].accepted;
+      const acceptedUrls = getAcceptedUrlsFromLocalStorage();
+      const inLocalStorage = acceptedUrls.includes(testData[0].linkedin);
+      
+      log(`重新选中后状态: checked=${afterChecked}, value="${afterValue}"`);
+      log(`localStorage状态: ${inLocalStorage ? '已同步' : '未同步'}`);
+      
+      const success = afterChecked === true && afterValue === '✓' && inLocalStorage;
+      log(success ? '✓ 测试通过: 重新选中checkbox' : '✗ 测试失败: 重新选中checkbox');
+      return { name: '重新选中checkbox', pass: success, details: `checked=${afterChecked}, value="${afterValue}", inLocalStorage=${inLocalStorage}` };
+    }
+
+    async function test5_MultipleCheckboxes() {
+      log('\n开始测试: 多个checkbox同步');
+      
+      // 选中第二个checkbox
+      const checkbox2 = document.querySelector('#tableBody tr:nth-child(2) input[type="checkbox"]');
+      checkbox2.click();
+      await sleep(500);
+      
+      // 选中第三个checkbox
+      const checkbox3 = document.querySelector('#tableBody tr:nth-child(3) input[type="checkbox"]');
+      checkbox3.click();
+      await sleep(500);
+      
+      const acceptedUrls = getAcceptedUrlsFromLocalStorage();
+      log(`当前localStorage中有${acceptedUrls.length}个accepted URLs`);
+      
+      const url1InStorage = acceptedUrls.includes(testData[0].linkedin);
+      const url2InStorage = acceptedUrls.includes(testData[1].linkedin);
+      const url3InStorage = acceptedUrls.includes(testData[2].linkedin);
+      
+      log(`URL1在localStorage: ${url1InStorage}`);
+      log(`URL2在localStorage: ${url2InStorage}`);
+      log(`URL3在localStorage: ${url3InStorage}`);
+      
+      const success = url1InStorage && url2InStorage && url3InStorage && acceptedUrls.length === 3;
+      log(success ? '✓ 测试通过: 多个checkbox同步' : '✗ 测试失败: 多个checkbox同步');
+      return { name: '多个checkbox同步', pass: success, details: `localStorage count=${acceptedUrls.length}, expected=3` };
+    }
+
+    async function test6_UncheckAll() {
+      log('\n开始测试: 取消所有checkbox');
+      
+      // 取消所有checkbox
+      const checkboxes = document.querySelectorAll('#tableBody input[type="checkbox"]');
+      for (let i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+          checkboxes[i].click();
+          await sleep(300);
+        }
+      }
+      
+      await sleep(500);
+      
+      const acceptedUrls = getAcceptedUrlsFromLocalStorage();
+      log(`取消所有后，localStorage中有${acceptedUrls.length}个accepted URLs`);
+      
+      const allUnchecked = testData.every(row => row.accepted === '');
+      const localStorageEmpty = acceptedUrls.length === 0;
+      
+      const success = allUnchecked && localStorageEmpty;
+      log(success ? '✓ 测试通过: 取消所有checkbox' : '✗ 测试失败: 取消所有checkbox');
+      return { name: '取消所有checkbox', pass: success, details: `allUnchecked=${allUnchecked}, localStorageEmpty=${localStorageEmpty}` };
+    }
+
+    async function runAllTests() {
+      if (isTestRunning) return;
+      
+      isTestRunning = true;
+      document.getElementById('runAllBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      testResults = [];
+      
+      clearLog();
+      log('========================================');
+      log('开始自动化测试套件');
+      log('========================================');
+      
+      setStatus('🔄 测试运行中...', 'running');
+      
+      try {
+        // 重置数据
+        testData = [
+          { accepted: '', company: 'Company A', ceo: 'CEO A', linkedin: 'https://www.linkedin.com/in/test1' },
+          { accepted: '', company: 'Company B', ceo: 'CEO B', linkedin: 'https://www.linkedin.com/in/test2' },
+          { accepted: '', company: 'Company C', ceo: 'CEO C', linkedin: 'https://www.linkedin.com/in/test3' }
+        ];
+        editMode = false;
+        renderTable();
+        resetLocalStorage();
+        
+        await sleep(500);
+        
+        // 运行所有测试
+        testResults.push(await test1_EnableEditMode());
+        testResults.push(await test2_CheckCheckbox());
+        testResults.push(await test3_UncheckCheckbox());
+        testResults.push(await test4_CheckAgain());
+        testResults.push(await test5_MultipleCheckboxes());
+        testResults.push(await test6_UncheckAll());
+        
+        // 显示结果
+        const passed = testResults.filter(r => r.pass).length;
+        const failed = testResults.filter(r => !r.pass).length;
+        
+        log('\n========================================');
+        log(`测试完成: ${passed} 通过, ${failed} 失败`);
+        log('========================================');
+        
+        if (failed === 0) {
+          setStatus(`✓ 所有测试通过 (${passed}/${testResults.length})`, 'success');
+        } else {
+          setStatus(`✗ 测试失败 (${passed}/${testResults.length} 通过, ${failed} 失败)`, 'error');
+        }
+        
+        displayResults();
+        
+      } catch (error) {
+        log(`\n❌ 测试过程出错: ${error.message}`);
+        setStatus('❌ 测试出错', 'error');
+      } finally {
+        isTestRunning = false;
+        document.getElementById('runAllBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+      }
+    }
+
+    function displayResults() {
+      const resultsDiv = document.getElementById('testResults');
+      const detailedDiv = document.getElementById('detailedResults');
+      
+      const passed = testResults.filter(r => r.pass).length;
+      const failed = testResults.filter(r => !r.pass).length;
+      
+      resultsDiv.innerHTML = failed === 0 
+        ? `✓ 所有测试通过 (${passed}/${testResults.length})`
+        : `✗ 测试失败 (${passed}/${testResults.length} 通过, ${failed} 失败)`;
+      
+      detailedDiv.innerHTML = testResults.map(r => `
+        <div class="test-item ${r.pass ? 'pass' : 'fail'}">
+          ${r.pass ? '✓' : '✗'} ${r.name}
+          ${r.details ? `<br><small>${r.details}</small>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function stopTests() {
+      isTestRunning = false;
+      log('\n⚠️ 测试已停止');
+      setStatus('⚠️ 测试已停止', 'error');
+    }
+
+    // 初始化
+    renderTable();
+    log('测试环境已准备就绪');
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,223 @@
+.table-container {
+  overflow: auto;
+  max-height: calc(100vh - 350px);
+  position: relative;
+  background: var(--bg-paper);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+  color: var(--bg-paper);
+  padding: 15px 12px;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  border-right: 1px solid rgba(243, 237, 227, 0.3);
+  border-bottom: 1.5px solid rgba(63, 52, 43, 0.2);
+  white-space: nowrap;
+}
+
+th:first-child {
+  background: linear-gradient(135deg, var(--accent-teal) 0%, var(--green-2) 100%);
+  min-width: 200px;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(63, 52, 43, 0.1);
+  font-size: 14px;
+  word-wrap: break-word;
+  font-family: var(--font-sans);
+  color: var(--ink-line);
+}
+
+tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: rgba(138, 167, 83, 0.08);
+}
+
+tbody tr:nth-child(even) {
+  background-color: rgba(243, 237, 227, 0.5);
+}
+
+tbody tr:nth-child(even):hover {
+  background-color: rgba(138, 167, 83, 0.12);
+}
+
+tbody tr.selected {
+  background-color: rgba(230, 154, 0, 0.15);
+}
+
+tbody tr.selected:hover {
+  background-color: rgba(230, 154, 0, 0.2);
+}
+
+td:first-child {
+  background: rgba(230, 154, 0, 0.1);
+  font-weight: 500;
+  text-align: center;
+  color: var(--soil-brown);
+}
+
+.row-selector-cell {
+  text-align: center;
+  width: 50px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.row-selector-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--soil-brown);
+  background: transparent;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-selector-cell:hover .row-selector-circle {
+  border-color: var(--accent-ochre);
+  background: rgba(230, 154, 0, 0.1);
+}
+
+.row-selector-cell.selected .row-selector-circle {
+  background: var(--accent-ochre);
+  border-color: var(--accent-ochre);
+}
+
+.row-selector-cell.selected .row-selector-circle::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg-paper);
+}
+
+th.row-selector-cell {
+  background: linear-gradient(135deg, var(--green-2) 0%, var(--green-1) 100%);
+  border-right: 1px solid rgba(243, 237, 227, 0.3);
+}
+
+.checkbox-cell {
+  text-align: center;
+  width: 60px;
+  cursor: pointer;
+}
+
+.checkbox-cell input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #000000;
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  border-color: #000000;
+}
+
+/* 确保checkbox选中时显示为黑色 */
+.checkbox-cell input[type="checkbox"]:checked {
+  accent-color: #000000;
+  background-color: #000000;
+  border-color: #000000;
+}
+
+/* Firefox */
+.checkbox-cell input[type="checkbox"]:checked {
+  filter: brightness(0);
+}
+
+.checkbox-cell input[type="checkbox"]:not(:disabled) {
+  cursor: pointer;
+  accent-color: #000000;
+}
+
+.checkbox-cell input[type="checkbox"]:disabled {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+td[contentEditable="true"] {
+  background: rgba(230, 154, 0, 0.05);
+  outline: 2px solid transparent;
+  transition: outline 0.2s ease;
+}
+
+td[contentEditable="true"]:focus {
+  outline: 2px solid var(--accent-ochre);
+  background: rgba(230, 154, 0, 0.1);
+}
+
+.cell-input {
+  width: 100%;
+  border: 2px solid var(--accent-ochre);
+  padding: 4px 8px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  background: rgba(230, 154, 0, 0.1);
+  outline: none;
+}
+
+.link-cell {
+  color: var(--accent-teal);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--accent-teal);
+  transition: all 0.2s ease;
+}
+
+.link-cell:hover {
+  color: var(--green-2);
+  border-bottom-color: var(--green-2);
+  border-bottom-style: solid;
+}
+
+.empty {
+  text-align: center;
+  padding: 50px;
+  color: var(--soil-brown);
+  font-family: var(--font-sans);
+  opacity: 0.7;
+}
+
+/* Scrollbar styles */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: rgba(243, 237, 227, 0.5);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--soil-brown);
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--green-2);
+  opacity: 0.8;
+}
+

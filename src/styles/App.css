@@ -1,0 +1,47 @@
+.app {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.container {
+  flex: 1;
+  background: var(--bg-paper);
+  border-radius: var(--card-radius);
+  box-shadow: 0 6px 14px var(--muted-shadow);
+  overflow: hidden;
+  border: 1.5px solid rgba(63, 52, 43, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: var(--bg-paper);
+  border-radius: var(--card-radius);
+  box-shadow: 0 6px 14px var(--muted-shadow);
+  border: 1.5px solid rgba(63, 52, 43, 0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  color: var(--soil-brown);
+  font-family: var(--font-sans);
+}
+
+.empty {
+  text-align: center;
+  padding: 50px;
+  color: var(--soil-brown);
+  font-family: var(--font-sans);
+  opacity: 0.7;
+}
+

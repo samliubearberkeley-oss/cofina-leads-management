@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量标记LinkedIn链接为Accepted</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>批量标记LinkedIn链接为Accepted</h1>
+        
+        <div class="info">
+            <strong>说明：</strong>
+            <ul>
+                <li>此工具将标记74个LinkedIn链接为accepted状态</li>
+                <li>标记后，对应的checkbox会在相应sheet中自动打勾</li>
+                <li>请确保您在正确的域名下运行此工具（与主应用相同的域名）</li>
+                <li>操作完成后请刷新主应用页面以查看更新</li>
+            </ul>
+        </div>
+        
+        <button id="markBtn" onclick="markLinkedInAsAccepted()">开始标记</button>
+        <button onclick="checkStatus()">检查状态</button>
+        <button onclick="clearLog()">清空日志</button>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        // 用户提供的需要标记为accepted的LinkedIn链接列表
+        const acceptedLinkedInUrls = [
+          // Series A
+          'https://www.linkedin.com/in/animesh-koratana/',
+          'https://www.linkedin.com/in/eric-ciarla/',
+          'https://www.linkedin.com/in/divyaanshumakkar/',
+          'https://www.linkedin.com/in/stacyedgar/',
+          'https://www.linkedin.com/in/emily-long-7a194b4',
+          'https://www.linkedin.com/in/parkerence',
+          'https://www.linkedin.com/in/coltoncalandrella',
+          'https://www.linkedin.com/in/macliu1/',
+          'https://www.linkedin.com/in/lukearrigoni',
+          'https://www.linkedin.com/in/varun-puri001',
+          'https://www.linkedin.com/in/joseph-rutakangwa',
+          'https://www.linkedin.com/in/aneesh-dhawan-140212141',
+          'https://www.linkedin.com/in/jaspar-carmichael-jack',
+          
+          // Series Seed
+          'https://www.linkedin.com/in/rajsekhark/',
+          'https://www.linkedin.com/in/ahmed-rashad-perle',
+          'https://www.linkedin.com/in/jugal-anchalia-0a2ab220',
+          'https://www.linkedin.com/in/priyanshabagaria',
+          'https://www.linkedin.com/in/stamirowska',
+          'https://www.linkedin.com/in/sal-rehmetullah-59704741',
+          'https://www.linkedin.com/in/dovyoran',
+          'https://www.linkedin.com/in/drishanarora',
+          'https://www.linkedin.com/in/rickyarora',
+          'https://www.linkedin.com/in/williamjunchenwu',
+          'https://www.linkedin.com/in/shawn-shen-jx',
+          'https://www.linkedin.com/in/kristian-kamber-b4b05a68',
+          'https://www.linkedin.com/in/roshankumars',
+          'https://www.linkedin.com/in/waleedatallah/',
+          'https://www.linkedin.com/in/natmon',
+          'https://www.linkedin.com/in/lindon-gao',
+          'https://www.linkedin.com/in/edrizio-de-la-cruz',
+          'https://www.linkedin.com/in/bellis',
+          'https://www.linkedin.com/in/pulkitjaiswal',
+          'https://www.linkedin.com/in/matthew-vega-sanz',
+          'https://www.linkedin.com/in/mishal-thadani',
+          
+          // Seed Stage VC
+          'https://www.linkedin.com/in/jonathanabrams',
+          'https://www.linkedin.com/in/mike-collins-362100',
+          'https://www.linkedin.com/in/franziska-bossart-b3799153',
+          'https://www.linkedin.com/in/hannahchelkowski',
+          'https://www.linkedin.com/in/neerajgupta123',
+          'https://www.linkedin.com/in/davidongchoco',
+          'https://www.linkedin.com/in/daynagrayson',
+          'https://www.linkedin.com/in/hadleyharris',
+          'https://www.linkedin.com/in/heikkilajesse',
+          'https://www.linkedin.com/in/luzhangvc',
+          'https://www.linkedin.com/in/rktaparia',
+          'https://il.linkedin.com/in/yuvalpassov',
+          'https://www.linkedin.com/in/maxaltschuler',
+          'https://www.linkedin.com/in/david-stark-36bb1938/',
+          'https://www.linkedin.com/in/mauricio-porras-837995105',
+          'https://www.linkedin.com/in/gregfrick',
+          'https://ae.linkedin.com/in/hervecuviliez',
+          'https://www.linkedin.com/in/nathanmcdonald1',
+          'https://www.linkedin.com/in/karl-alomar-0516a219',
+          'https://www.linkedin.com/in/amir-amidi',
+          'https://www.linkedin.com/in/chenxiwang88',
+          'https://www.linkedin.com/in/alchuang',
+          'https://www.linkedin.com/in/sudeepmishra?trk=org-employees',
+          'https://www.linkedin.com/in/ryanfloyd1',
+          'https://www.linkedin.com/in/andrew-marks-92429015',
+          'https://www.linkedin.com/in/trangnguyen2010?trk=org-employees',
+          
+          // recent raised series B
+          'https://www.linkedin.com/in/nickbonfiglio',
+          'https://www.linkedin.com/in/sureshmathew',
+          'https://www.linkedin.com/in/thejuliomartinez/',
+          'https://www.linkedin.com/in/joniklippert',
+          'https://www.linkedin.com/in/khalidraza',
+          'https://www.linkedin.com/in/stephenwhitworth/',
+          'https://www.linkedin.com/in/yair-kuznitsov/',
+          'https://www.linkedin.com/in/colinzima',
+          'https://www.linkedin.com/in/maximser',
+          'https://www.linkedin.com/in/alexandre-de-vigan-26388015/'
+        ];
+
+        // 解析CSV行（处理引号内的逗号）
+        function parseCSVLine(line) {
+          const values = [];
+          let current = '';
+          let inQuotes = false;
+          
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = i < line.length - 1 ? line[i + 1] : '';
+            
+            if (char === '"') {
+              if (inQuotes && nextChar === '"') {
+                // 转义的双引号
+                current += '"';
+                i++; // 跳过下一个引号
+              } else {
+                // 切换引号状态
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              values.push(current.trim());
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+          values.push(current.trim()); // 添加最后一个值
+          return values;
+        }
+
+        // 标准化LinkedIn URL（用于匹配）
+        function normalizeLinkedInUrl(url) {
+          if (!url) return '';
+          const urlStr = String(url).trim();
+          if (!urlStr.startsWith('http')) return '';
+          
+          // 移除查询参数和锚点，统一处理末尾斜杠
+          try {
+            const urlObj = new URL(urlStr);
+            let pathname = urlObj.pathname;
+            // 统一移除末尾斜杠（除非是根路径）
+            if (pathname !== '/' && pathname.endsWith('/')) {
+              pathname = pathname.slice(0, -1);
+            }
+            // 注意：LinkedIn URL路径大小写敏感，不要转小写
+            return urlObj.origin + pathname;
+          } catch {
+            // 如果URL解析失败，尝试简单处理
+            let cleaned = urlStr.split('?')[0].split('#')[0];
+            if (cleaned.endsWith('/') && cleaned !== '/') {
+              cleaned = cleaned.slice(0, -1);
+            }
+            return cleaned;
+          }
+        }
+
+        function log(message, type = 'info') {
+          const logDiv = document.getElementById('log');
+          const timestamp = new Date().toLocaleTimeString();
+          const prefix = type === 'success' ? '✓' : type === 'error' ? '✗' : '•';
+          const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+          logDiv.innerHTML += `<span class="${className}">[${timestamp}] ${prefix} ${message}</span>\n`;
+          logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+          document.getElementById('log').innerHTML = '';
+        }
+
+        async function markLinkedInAsAccepted() {
+          const btn = document.getElementById('markBtn');
+          btn.disabled = true;
+          clearLog();
+          
+          try {
+            log('开始处理...', 'info');
+            log(`需要标记的URL数量: ${acceptedLinkedInUrls.length}`, 'info');
+            
+            // 加载存储
+            const storage = JSON.parse(localStorage.getItem('cofina_data_storage') || '{}');
+            
+            // 标准化所有需要标记的URL
+            const normalizedAcceptedUrls = acceptedLinkedInUrls.map(url => normalizeLinkedInUrl(url));
+            
+            // CSV文件映射
+            const csvFiles = {
+              "Series A": "/leads - Series A (1).csv",
+              "Series Seed": "/leads - Series Seed (2).csv",
+              "Seed Stage VC": "/leads - Seed Stage VC (1).csv",
+              "recent raised series B": "/leads - recent raised series B (2).csv"
+            };
+            
+            // 读取所有CSV文件并匹配
+            for (const [sheetName, csvPath] of Object.entries(csvFiles)) {
+              try {
+                log(`\n处理 ${sheetName}...`, 'info');
+                
+                const response = await fetch(csvPath);
+                if (!response.ok) {
+                  log(`无法读取文件: ${csvPath}`, 'error');
+                  continue;
+                }
+                
+                const text = await response.text();
+                
+                // 使用Papa Parse解析CSV（如果可用），否则使用简单解析
+                let parsedData;
+                let headers;
+                
+                if (typeof Papa !== 'undefined') {
+                  // 使用Papa Parse
+                  const result = Papa.parse(text, {
+                    header: true,
+                    skipEmptyLines: true
+                  });
+                  parsedData = result.data;
+                  headers = result.meta.fields || [];
+                } else {
+                  // 简单CSV解析
+                  const lines = text.split('\n').filter(line => line.trim());
+                  if (lines.length === 0) {
+                    log(`文件 ${sheetName} 为空`, 'error');
+                    continue;
+                  }
+                  
+                  // 解析第一行作为标题
+                  headers = parseCSVLine(lines[0]);
+                  parsedData = [];
+                  
+                  for (let i = 1; i < lines.length; i++) {
+                    const values = parseCSVLine(lines[i]);
+                    const row = {};
+                    headers.forEach((header, idx) => {
+                      row[header] = values[idx] || '';
+                    });
+                    parsedData.push(row);
+                  }
+                }
+                
+                // 查找LinkedIn列索引
+                const linkedInColIndices = [];
+                headers.forEach((col, idx) => {
+                  const lower = col.toLowerCase();
+                  if (lower.includes('linkedin') && !lower.includes('accepted') && !lower.includes('request')) {
+                    linkedInColIndices.push(idx);
+                  }
+                });
+                
+                log(`找到LinkedIn列: ${linkedInColIndices.map(i => headers[i]).join(', ')}`, 'info');
+                
+                if (linkedInColIndices.length === 0) {
+                  log(`在 ${sheetName} 中未找到LinkedIn列`, 'error');
+                  continue;
+                }
+                
+                // 初始化存储
+                if (!storage[sheetName]) {
+                  storage[sheetName] = {};
+                }
+                if (!storage[sheetName].linkedin_accepted) {
+                  storage[sheetName].linkedin_accepted = {};
+                }
+                
+                let matchedCount = 0;
+                
+                // 遍历所有数据行
+                parsedData.forEach((row, rowIndex) => {
+                  // 检查这一行的任何一个LinkedIn列是否匹配
+                  for (const linkedInColIndex of linkedInColIndices) {
+                    const headerName = headers[linkedInColIndex];
+                    const rowLinkedIn = row[headerName] || '';
+                    const normalizedRowLinkedIn = normalizeLinkedInUrl(rowLinkedIn);
+                    
+                    if (!normalizedRowLinkedIn) continue;
+                    
+                    // 检查是否在需要标记的列表中
+                    const matched = normalizedAcceptedUrls.some(url => {
+                      const normalizedAcceptedLinkedIn = normalizeLinkedInUrl(url);
+                      return normalizedRowLinkedIn === normalizedAcceptedLinkedIn;
+                    });
+                    
+                    if (matched) {
+                      storage[sheetName].linkedin_accepted[rowIndex] = true;
+                      matchedCount++;
+                      log(`匹配: ${normalizedRowLinkedIn} (行 ${rowIndex})`, 'success');
+                      break; // 找到一个匹配就退出
+                    }
+                  }
+                });
+                
+                log(`${sheetName}: 标记了 ${matchedCount} 行`, 'success');
+              } catch (error) {
+                log(`处理 ${sheetName} 时出错: ${error.message}`, 'error');
+              }
+            }
+            
+            // 保存到localStorage
+            localStorage.setItem('cofina_data_storage', JSON.stringify(storage));
+            
+            log('\n✓ 完成！所有链接已标记为accepted', 'success');
+            log('请刷新主应用页面以查看更新', 'info');
+            
+            btn.disabled = false;
+          } catch (error) {
+            log(`执行失败: ${error.message}`, 'error');
+            btn.disabled = false;
+          }
+        }
+
+        function checkStatus() {
+          clearLog();
+          try {
+            const storage = JSON.parse(localStorage.getItem('cofina_data_storage') || '{}');
+            log('当前localStorage状态:', 'info');
+            
+            const sheets = ['Series A', 'Series Seed', 'Seed Stage VC', 'recent raised series B'];
+            sheets.forEach(sheetName => {
+              if (storage[sheetName] && storage[sheetName].linkedin_accepted) {
+                const count = Object.keys(storage[sheetName].linkedin_accepted).filter(
+                  k => storage[sheetName].linkedin_accepted[k] === true
+                ).length;
+                log(`${sheetName}: ${count} 个链接已标记`, 'success');
+              } else {
+                log(`${sheetName}: 0 个链接已标记`, 'info');
+              }
+            });
+          } catch (error) {
+            log(`检查状态失败: ${error.message}`, 'error');
+          }
+        }
+    </script>
+</body>
+</html>
+

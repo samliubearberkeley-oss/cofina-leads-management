@@ -1,0 +1,60 @@
+.tabs {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-paper);
+  border: 1.5px solid rgba(63, 52, 43, 0.15);
+  border-radius: var(--card-radius);
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  gap: 0;
+}
+
+.tabs::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(63, 52, 43, 0.04) 1px, transparent 0);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.tab {
+  padding: 15px 20px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--soil-brown);
+  transition: all 160ms ease;
+  white-space: nowrap;
+  text-align: left;
+  border-bottom: 1px solid rgba(63, 52, 43, 0.1);
+  border-left: 3px solid transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.tab:last-child {
+  border-bottom: none;
+}
+
+.tab:hover {
+  background: rgba(138, 167, 83, 0.1);
+  color: var(--green-2);
+}
+
+.tab.active {
+  color: var(--green-2);
+  border-left-color: var(--accent-ochre);
+  background: rgba(230, 154, 0, 0.08);
+  font-weight: 600;
+}
+

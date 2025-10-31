@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行选择功能自动化测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .test-container {
+            display: flex;
+            gap: 20px;
+        }
+        .test-section {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .info {
+            color: blue;
+        }
+        .warning {
+            color: orange;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #4caf50;
+            color: white;
+        }
+        tr.selected {
+            background-color: rgba(230, 154, 0, 0.15);
+        }
+        .checkbox-cell {
+            text-align: center;
+        }
+        .row-selector-cell {
+            text-align: center;
+            width: 50px;
+        }
+        .row-selector-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            margin: 0 auto;
+        }
+        .row-selector-cell.selected .row-selector-circle {
+            background: #ff9800;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.passing {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.failing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>行选择功能自动化测试</h1>
+    
+    <div class="test-container">
+        <div class="test-section">
+            <h2>控制面板</h2>
+            <button onclick="runAllTests()">运行所有测试</button>
+            <button onclick="stopTests()">停止测试</button>
+            <button onclick="clearLog()">清空日志</button>
+            <div id="status" class="status" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>测试结果</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试表格</h2>
+        <table id="testTable">
+            <thead>
+                <tr>
+                    <th class="row-selector-cell"></th>
+                    <th>linkedin accepted?</th>
+                    <th>Company Name</th>
+                    <th>CEO</th>
+                    <th>CEO Linkedin</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr data-row="0">
+                    <td class="row-selector-cell" onclick="toggleRowSelection(0, event)">
+                        <div class="row-selector-circle"></div>
+                    </td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="handleCheckboxChange(0, event)">
+                    </td>
+                    <td contenteditable="true">Company A</td>
+                    <td contenteditable="true">CEO A</td>
+                    <td>https://www.linkedin.com/in/test1</td>
+                </tr>
+                <tr data-row="1">
+                    <td class="row-selector-cell" onclick="toggleRowSelection(1, event)">
+                        <div class="row-selector-circle"></div>
+                    </td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="handleCheckboxChange(1, event)">
+                    </td>
+                    <td contenteditable="true">Company B</td>
+                    <td contenteditable="true">CEO B</td>
+                    <td>https://www.linkedin.com/in/test2</td>
+                </tr>
+                <tr data-row="2">
+                    <td class="row-selector-cell" onclick="toggleRowSelection(2, event)">
+                        <div class="row-selector-circle"></div>
+                    </td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="handleCheckboxChange(2, event)">
+                    </td>
+                    <td contenteditable="true">Company C</td>
+                    <td contenteditable="true">CEO C</td>
+                    <td>https://www.linkedin.com/in/test3</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试日志</h2>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let editMode = false;
+        let selectedRows = new Set();
+        let lastSelectedRow = null;
+        let testRunning = false;
+        let testResults = [];
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            logDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+            testResults = [];
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            log(`编辑模式: ${editMode ? '启用' : '禁用'}`, editMode ? 'success' : 'info');
+            
+            const table = document.getElementById('testTable');
+            if (editMode) {
+                table.classList.add('edit-mode');
+            } else {
+                table.classList.remove('edit-mode');
+                selectedRows.clear();
+                updateRowSelection();
+            }
+            
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.disabled = !editMode;
+            });
+            
+            return editMode;
+        }
+
+        function handleRowClick(rowIndex, e) {
+            if (!editMode) {
+                log(`handleRowClick: 编辑模式未启用 (editMode=${editMode})`, 'error');
+                return false;
+            }
+            
+            const clickedCell = e?.target?.closest ? e.target.closest('td') : null;
+            const clickedElement = e?.target;
+            
+            log(`handleRowClick 被调用: rowIndex=${rowIndex}, target=${clickedElement?.tagName}, cellClass=${clickedCell?.className}`, 'info');
+            
+            if (clickedElement?.type === 'checkbox' || 
+                clickedElement?.tagName === 'INPUT' ||
+                clickedCell?.classList.contains('checkbox-cell') || 
+                clickedCell?.classList.contains('row-selector-cell')) {
+                log('handleRowClick: 跳过特殊元素', 'info');
+                return false;
+            }
+
+            if (clickedElement?.tagName === 'A') {
+                log('handleRowClick: 跳过链接', 'info');
+                return false;
+            }
+
+            const modifierPressed = e?.ctrlKey || e?.metaKey || false;
+            const shiftPressed = e?.shiftKey || false;
+            
+            log(`handleRowClick: modifierPressed=${modifierPressed}, shiftPressed=${shiftPressed}, 当前选中: [${Array.from(selectedRows).join(', ')}]`, 'info');
+            
+            if (shiftPressed && lastSelectedRow !== null) {
+                const start = Math.min(lastSelectedRow, rowIndex);
+                const end = Math.max(lastSelectedRow, rowIndex);
+                log(`范围选择: ${start} 到 ${end}`, 'info');
+                for (let i = start; i <= end; i++) {
+                    selectedRows.add(i);
+                }
+            } else {
+                const newSelected = modifierPressed ? new Set(selectedRows) : new Set(selectedRows);
+                if (modifierPressed) {
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                        log(`Ctrl+点击，取消选择行 ${rowIndex}`, 'info');
+                    } else {
+                        newSelected.add(rowIndex);
+                        log(`Ctrl+点击，选择行 ${rowIndex}`, 'info');
+                    }
+                } else {
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                        log(`普通点击，取消选择行 ${rowIndex}`, 'info');
+                    } else {
+                        newSelected.clear();
+                        newSelected.add(rowIndex);
+                        log(`普通点击，选择行 ${rowIndex}`, 'info');
+                    }
+                }
+                selectedRows = newSelected;
+            }
+            
+            lastSelectedRow = rowIndex;
+            updateRowSelection();
+            log(`handleRowClick 完成: selectedRows=[${Array.from(selectedRows).join(', ')}]`, 'info');
+            return true;
+        }
+
+        function toggleRowSelection(rowIndex, e) {
+            if (!editMode) return;
+            e.stopPropagation();
+            
+            const modifierPressed = e.ctrlKey || e.metaKey;
+            const shiftPressed = e.shiftKey;
+            
+            if (shiftPressed && lastSelectedRow !== null) {
+                const start = Math.min(lastSelectedRow, rowIndex);
+                const end = Math.max(lastSelectedRow, rowIndex);
+                for (let i = start; i <= end; i++) {
+                    selectedRows.add(i);
+                }
+            } else {
+                const newSelected = modifierPressed ? new Set(selectedRows) : new Set(selectedRows);
+                if (modifierPressed) {
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                    } else {
+                        newSelected.add(rowIndex);
+                    }
+                } else {
+                    if (newSelected.has(rowIndex)) {
+                        newSelected.delete(rowIndex);
+                    } else {
+                        newSelected.clear();
+                        newSelected.add(rowIndex);
+                    }
+                }
+                selectedRows = newSelected;
+            }
+            
+            lastSelectedRow = rowIndex;
+            updateRowSelection();
+        }
+
+        function handleCheckboxChange(rowIndex, e) {
+            e.stopPropagation();
+            log(`Checkbox ${rowIndex} 改变: ${e.target.checked}`, 'info');
+        }
+
+        function updateRowSelection() {
+            document.querySelectorAll('tbody tr').forEach((row, index) => {
+                const isSelected = selectedRows.has(index);
+                row.classList.toggle('selected', isSelected);
+                
+                const selectorCell = row.querySelector('.row-selector-cell');
+                if (selectorCell) {
+                    selectorCell.classList.toggle('selected', isSelected);
+                }
+            });
+        }
+
+        async function simulateClick(element, options = {}) {
+            const events = ['mousedown', 'mouseup', 'click'];
+            for (const eventType of events) {
+                const event = new MouseEvent(eventType, {
+                    bubbles: true,
+                    cancelable: true,
+                    detail: options.detail || 1,
+                    ...options
+                });
+                element.dispatchEvent(event);
+                await sleep(10);
+            }
+        }
+
+        async function testCase(name, testFn) {
+            log(`\n开始测试: ${name}`, 'info');
+            try {
+                const result = await testFn();
+                if (result) {
+                    log(`✓ 测试通过: ${name}`, 'success');
+                    testResults.push({ name, passed: true });
+                    return true;
+                } else {
+                    log(`✗ 测试失败: ${name}`, 'error');
+                    testResults.push({ name, passed: false });
+                    return false;
+                }
+            } catch (error) {
+                log(`✗ 测试异常: ${name} - ${error.message}`, 'error');
+                testResults.push({ name, passed: false, error: error.message });
+                return false;
+            }
+        }
+
+        async function test1_EnableEditMode() {
+            const enabled = toggleEditMode();
+            await sleep(100);
+            return enabled === true;
+        }
+
+        async function test2_SelectRow() {
+            const row = document.querySelector('tbody tr[data-row="0"]');
+            const cell = row.querySelector('td:nth-child(3)'); // Company Name列 (index 2, 0-based)
+            
+            if (!cell) {
+                log('错误: 找不到单元格', 'error');
+                return false;
+            }
+            
+            log(`准备点击单元格: rowIndex=0, cellIndex=2`, 'info');
+            
+            // 直接调用handleRowClick来模拟点击
+            const mockEvent = {
+                target: cell,
+                preventDefault: () => {},
+                stopPropagation: () => {},
+                ctrlKey: false,
+                metaKey: false,
+                shiftKey: false,
+                detail: 1,
+                closest: (selector) => cell.closest(selector)
+            };
+            
+            // 触发cell的mousedown事件
+            const event = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                detail: 1
+            });
+            
+            cell.dispatchEvent(event);
+            await sleep(300);
+            
+            const isSelected = selectedRows.has(0);
+            log(`行0是否被选中: ${isSelected}, selectedRows: [${Array.from(selectedRows).join(', ')}]`, isSelected ? 'success' : 'error');
+            return isSelected;
+        }
+
+        async function test3_UnselectRow() {
+            const row = document.querySelector('tbody tr[data-row="0"]');
+            const cell = row.querySelector('td:nth-child(3)'); // Company Name列
+            
+            if (!selectedRows.has(0)) {
+                log('警告: 行0未被选中，先手动选择', 'warning');
+                // 先手动选择
+                selectedRows.add(0);
+                updateRowSelection();
+                await sleep(100);
+            }
+            
+            log(`准备取消选择行0，当前状态: ${selectedRows.has(0)}`, 'info');
+            
+            const event = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                detail: 1
+            });
+            
+            cell.dispatchEvent(event);
+            await sleep(300);
+            
+            const isSelected = selectedRows.has(0);
+            log(`行0是否被取消选中: ${!isSelected}, selectedRows: [${Array.from(selectedRows).join(', ')}]`, !isSelected ? 'success' : 'error');
+            return !isSelected;
+        }
+
+        async function test4_SelectRowAgain() {
+            const row = document.querySelector('tbody tr[data-row="0"]');
+            const cell = row.querySelector('td:nth-child(3)');
+            
+            log(`准备重新选择行0，当前状态: ${selectedRows.has(0)}`, 'info');
+            
+            const event = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                detail: 1
+            });
+            
+            cell.dispatchEvent(event);
+            await sleep(300);
+            
+            const isSelected = selectedRows.has(0);
+            log(`行0是否重新被选中: ${isSelected}, selectedRows: [${Array.from(selectedRows).join(', ')}]`, isSelected ? 'success' : 'error');
+            return isSelected;
+        }
+
+        async function test5_SelectMultipleRows() {
+            selectedRows.clear();
+            updateRowSelection();
+            await sleep(100);
+            
+            log('开始多行选择测试', 'info');
+            
+            // 选择第一行
+            const row1 = document.querySelector('tbody tr[data-row="0"]');
+            const cell1 = row1.querySelector('td:nth-child(3)');
+            const event1 = new MouseEvent('mousedown', { bubbles: true, cancelable: true, detail: 1 });
+            cell1.dispatchEvent(event1);
+            await sleep(300);
+            log(`第一行选择后: selectedRows=[${Array.from(selectedRows).join(', ')}]`, 'info');
+            
+            // 选择第二行（Ctrl+点击）
+            const row2 = document.querySelector('tbody tr[data-row="1"]');
+            const cell2 = row2.querySelector('td:nth-child(3)');
+            const event2 = new MouseEvent('mousedown', { 
+                bubbles: true, 
+                cancelable: true, 
+                detail: 1,
+                ctrlKey: true 
+            });
+            cell2.dispatchEvent(event2);
+            await sleep(300);
+            
+            const bothSelected = selectedRows.has(0) && selectedRows.has(1);
+            log(`多行选择: 行0=${selectedRows.has(0)}, 行1=${selectedRows.has(1)}, selectedRows=[${Array.from(selectedRows).join(', ')}]`, bothSelected ? 'success' : 'error');
+            return bothSelected;
+        }
+
+        async function runAllTests() {
+            if (testRunning) {
+                log('测试已在运行中', 'warning');
+                return;
+            }
+            
+            testRunning = true;
+            clearLog();
+            selectedRows.clear();
+            editMode = false;
+            updateRowSelection();
+            
+            log('========================================', 'info');
+            log('开始自动化测试套件', 'info');
+            log('========================================', 'info');
+            
+            const tests = [
+                ['启用编辑模式', test1_EnableEditMode],
+                ['选择行', test2_SelectRow],
+                ['取消选择行', test3_UnselectRow],
+                ['重新选择行', test4_SelectRowAgain],
+                ['多行选择 (Ctrl+点击)', test5_SelectMultipleRows]
+            ];
+            
+            let passed = 0;
+            let failed = 0;
+            
+            for (const [name, testFn] of tests) {
+                if (!testRunning) {
+                    log('测试被中断', 'warning');
+                    break;
+                }
+                
+                const result = await testCase(name, testFn);
+                if (result) {
+                    passed++;
+                } else {
+                    failed++;
+                }
+                
+                await sleep(300);
+            }
+            
+            testRunning = false;
+            
+            log('\n========================================', 'info');
+            log(`测试完成: ${passed} 通过, ${failed} 失败`, failed === 0 ? 'success' : 'error');
+            log('========================================', 'info');
+            
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            if (failed === 0) {
+                statusDiv.className = 'status passing';
+                statusDiv.textContent = `✓ 所有测试通过 (${passed}/${tests.length})`;
+                statusDiv.style.display = 'block';
+            } else {
+                statusDiv.className = 'status failing';
+                statusDiv.textContent = `✗ 测试失败 (${passed}/${tests.length} 通过, ${failed} 失败)`;
+                statusDiv.style.display = 'block';
+            }
+            
+            resultsDiv.innerHTML = '<h3>详细结果:</h3>' + 
+                testResults.map(r => 
+                    `<div class="${r.passed ? 'success' : 'error'}">${r.passed ? '✓' : '✗'} ${r.name}${r.error ? ` - ${r.error}` : ''}</div>`
+                ).join('');
+        }
+
+        function stopTests() {
+            testRunning = false;
+            log('测试已停止', 'warning');
+        }
+
+        // 初始化表格行点击事件
+        document.addEventListener('DOMContentLoaded', () => {
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+                const editableCells = row.querySelectorAll('td[contenteditable="true"]');
+                editableCells.forEach(cell => {
+                    cell.addEventListener('mousedown', (e) => {
+                        if (editMode && e.detail === 1) {
+                            e.preventDefault();
+                            // 阻止后，手动触发行选择
+                            handleRowClick(index, e);
+                        }
+                    });
+                });
+                
+                row.addEventListener('mousedown', (e) => {
+                    const clickedCell = e.target.closest('td');
+                    const clickedElement = e.target;
+                    
+                    if (clickedCell?.classList.contains('checkbox-cell') || 
+                        clickedCell?.classList.contains('row-selector-cell') ||
+                        clickedElement?.type === 'checkbox' ||
+                        clickedElement?.tagName === 'A' ||
+                        clickedElement?.tagName === 'INPUT') {
+                        return;
+                    }
+                    
+                    // 如果点击的是contentEditable单元格，并且已经preventDefault了，不再处理
+                    if (clickedCell?.hasAttribute('contenteditable') && clickedCell?.getAttribute('contenteditable') === 'true') {
+                        // 已经在cell的mousedown中处理了
+                        return;
+                    }
+                    
+                    handleRowClick(index, e);
+                });
+            });
+            
+            log('测试页面初始化完成', 'success');
+            log('点击"运行所有测试"按钮开始测试', 'info');
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,50 @@
+.stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  background: var(--bg-paper);
+  border-bottom: 1px solid rgba(63, 52, 43, 0.15);
+  position: relative;
+}
+
+.stats::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(63, 52, 43, 0.04) 1px, transparent 0);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.stat-item {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-value {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  color: var(--accent-ochre);
+  line-height: 1.2;
+}
+
+.stat-label {
+  color: var(--soil-brown);
+  font-size: 14px;
+  margin-top: 5px;
+  font-family: var(--font-sans);
+  opacity: 0.8;
+}
+
+#currentSheet {
+  font-size: 0.9em;
+  word-break: break-word;
+}
+
