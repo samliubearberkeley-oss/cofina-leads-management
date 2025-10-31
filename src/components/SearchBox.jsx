@@ -7,7 +7,7 @@ function SearchBox({ value, onChange }) {
       <input
         type="text"
         id="searchInput"
-        placeholder="🔍 搜索表格内容..."
+        placeholder="🔍 Search table content..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

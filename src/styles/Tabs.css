@@ -8,6 +8,8 @@
   overflow-x: hidden;
   position: relative;
   gap: 0;
+  flex: 1;
+  min-height: 0;
 }
 
 .tabs::before {
@@ -58,3 +60,33 @@
   font-weight: 600;
 }
 
+/* LinkedIn Accepted 特殊样式 */
+.tab.linkedin-accepted {
+  background: linear-gradient(135deg, rgba(138, 167, 83, 0.15) 0%, rgba(138, 167, 83, 0.08) 100%);
+  border-left: 3px solid var(--green-2);
+  font-weight: 600;
+  color: var(--green-2);
+}
+
+.tab.linkedin-accepted:hover {
+  background: linear-gradient(135deg, rgba(138, 167, 83, 0.25) 0%, rgba(138, 167, 83, 0.15) 100%);
+}
+
+.tab.linkedin-accepted.active {
+  background: linear-gradient(135deg, rgba(138, 167, 83, 0.2) 0%, rgba(138, 167, 83, 0.12) 100%);
+  border-left-color: var(--green-2);
+}
+
+.tab-badge {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.tab-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(63, 52, 43, 0.2), transparent);
+  margin: 8px 15px;
+  position: relative;
+  z-index: 1;
+}

@@ -1,6 +1,7 @@
 .stats {
   display: flex;
   justify-content: space-around;
+  align-items: center;
   padding: 20px;
   background: var(--bg-paper);
   border-bottom: 1px solid rgba(63, 52, 43, 0.15);
@@ -43,8 +44,22 @@
   opacity: 0.8;
 }
 
-#currentSheet {
-  font-size: 0.9em;
+.stat-sheet {
+  text-align: left;
+}
+
+.stat-sheet .stat-label {
+  margin-top: 0;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.stat-sheet-name {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--green-2);
+  line-height: 1.3;
   word-break: break-word;
 }
 

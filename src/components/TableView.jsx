@@ -49,7 +49,7 @@ function TableView({ data, editMode, onCellEdit, selectedRows, onRowSelect }) {
   if (!data || !data.columns || !data.data || data.data.length === 0) {
     return (
       <div className="table-container">
-        <div className="empty">暂无数据</div>
+        <div className="empty">No data available</div>
       </div>
     )
   }

@@ -2,13 +2,12 @@ import Papa from 'papaparse'
 
 // CSV 文件映射
 const csvFiles = {
+  "LinkedIn Accepted": "/leads - LinkedIn Accepted.csv",
   "a16z-gaming": "/leads - a16z-gaming.csv",
   "recent raised series B": "/leads - recent raised series B (2).csv",
   "Seed Stage VC": "/leads - Seed Stage VC (1).csv",
   "Series A": "/leads - Series A (1).csv",
-  "Series Seed": "/leads - Series Seed (2).csv",
-  "LinkedIn Contacts": "/leads - LinkedIn Contacts.csv",
-  "LinkedIn Accepted": "/leads - LinkedIn Accepted.csv"
+  "Series Seed": "/leads - Series Seed (2).csv"
 }
 
 // 从localStorage加载保存的数据

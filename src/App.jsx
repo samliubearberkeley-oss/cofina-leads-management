@@ -45,9 +45,10 @@ function App() {
       setFilteredData(data)
       dataRef.current = data
       
-      // 显示第一个表格
+      // 优先显示 LinkedIn Accepted，否则显示第一个表格
       if (Object.keys(data).length > 0) {
-        const firstSheet = Object.keys(data)[0]
+        const linkedInAccepted = 'LinkedIn Accepted'
+        const firstSheet = data[linkedInAccepted] ? linkedInAccepted : Object.keys(data)[0]
         setCurrentSheet(firstSheet)
       }
       setLoading(false)
@@ -549,7 +550,7 @@ function App() {
   const handleDeleteRows = () => {
     if (!editMode || selectedRows.size === 0) return
     
-    if (!window.confirm(`删除 ${selectedRows.size} 行?`)) return
+    if (!window.confirm(`Delete ${selectedRows.size} row(s)?`)) return
     
     const sheet = { ...allData[currentSheet] }
     const indicesToDelete = Array.from(selectedRows).sort((a, b) => b - a)
@@ -657,15 +658,103 @@ function App() {
     }
   }
 
+  const handleExportToCSV = () => {
+    if (!currentSheet) return
+    
+    const displayData = getDisplayData()
+    const sheetData = displayData[currentSheet]
+    if (!sheetData || !sheetData.data || sheetData.data.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    // 准备CSV数据
+    const columns = sheetData.columns
+    const rows = sheetData.data
+    
+    // 创建CSV内容
+    let csvContent = ''
+    
+    // 添加列标题
+    csvContent += columns.map(col => {
+      // 处理包含逗号、引号或换行符的列名
+      if (col.includes(',') || col.includes('"') || col.includes('\n')) {
+        return `"${col.replace(/"/g, '""')}"`
+      }
+      return col
+    }).join(',') + '\n'
+    
+    // 添加数据行
+    rows.forEach(row => {
+      const csvRow = row.map(cell => {
+        const cellValue = cell === null || cell === undefined ? '' : String(cell)
+        // 处理包含逗号、引号或换行符的单元格
+        if (cellValue.includes(',') || cellValue.includes('"') || cellValue.includes('\n')) {
+          return `"${cellValue.replace(/"/g, '""')}"`
+        }
+        return cellValue
+      }).join(',')
+      csvContent += csvRow + '\n'
+    })
+    
+    // 创建下载链接
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${currentSheet}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="app">
       <div className="sidebar">
-        <EditToggle editMode={editMode} onToggle={handleEditModeToggle} />
-        <Tabs 
-          sheets={Object.keys(allData)} 
-          currentSheet={currentSheet}
-          onSheetChange={handleSheetChange}
-        />
+        <div className="sidebar-content">
+          <EditToggle editMode={editMode} onToggle={handleEditModeToggle} />
+          <Tabs 
+            sheets={Object.keys(allData)} 
+            currentSheet={currentSheet}
+            onSheetChange={handleSheetChange}
+          />
+        </div>
+        <div className="sidebar-footer">
+          <button
+            onClick={handleExportToCSV}
+            disabled={!currentSheet || loading}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              backgroundColor: currentSheet && !loading ? 'var(--green-2)' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: 'var(--button-radius)',
+              cursor: currentSheet && !loading ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+              fontFamily: 'var(--font-sans)',
+              boxShadow: currentSheet && !loading ? '0 2px 6px var(--muted-shadow)' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (currentSheet && !loading) {
+                e.target.style.transform = 'translateY(-1px)'
+                e.target.style.boxShadow = '0 4px 8px var(--muted-shadow)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (currentSheet && !loading) {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.boxShadow = '0 2px 6px var(--muted-shadow)'
+              }
+            }}
+          >
+            📥 Export to CSV
+          </button>
+        </div>
       </div>
       <div className="container">
         <Header />
@@ -682,7 +771,7 @@ function App() {
               fontSize: '14px',
               fontWeight: 'bold'
             }}>
-              ⚠️ 有未保存的更改
+              ⚠️ Unsaved changes
             </div>
           )}
         </div>
@@ -737,7 +826,7 @@ function App() {
           </div>
         )}
         {loading ? (
-          <div className="loading">正在加载数据...</div>
+          <div className="loading">Loading data...</div>
         ) : (
           <TableView
             data={getDisplayData()[currentSheet]}

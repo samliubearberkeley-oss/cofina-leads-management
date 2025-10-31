@@ -9,6 +9,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   min-width: 100%;
+  table-layout: auto;
 }
 
 thead {
@@ -42,6 +43,13 @@ td {
   word-wrap: break-word;
   font-family: var(--font-sans);
   color: var(--ink-line);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+td:not(.checkbox-cell):not(.row-selector-cell) {
+  text-align: left;
 }
 
 tbody tr {
@@ -71,7 +79,7 @@ tbody tr.selected:hover {
 td:first-child {
   background: rgba(230, 154, 0, 0.1);
   font-weight: 500;
-  text-align: center;
+  text-align: center !important;
   color: var(--soil-brown);
 }
 
@@ -183,6 +191,9 @@ td[contentEditable="true"]:focus {
   text-decoration: none;
   border-bottom: 1px dotted var(--accent-teal);
   transition: all 0.2s ease;
+  display: inline-block;
+  text-align: left;
+  max-width: 100%;
 }
 
 .link-cell:hover {

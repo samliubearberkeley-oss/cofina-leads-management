@@ -32,8 +32,7 @@ csv_files = {
     "recent raised series B": "leads - recent raised series B (2).csv",
     "Seed Stage VC": "leads - Seed Stage VC (1).csv",
     "Series A": "leads - Series A (1).csv",
-    "Series Seed": "leads - Series Seed (2).csv",
-    "LinkedIn Contacts": "leads - LinkedIn Contacts.csv"
+    "Series Seed": "leads - Series Seed (2).csv"
 }
 
 def load_storage():
